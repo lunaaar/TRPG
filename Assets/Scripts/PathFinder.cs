@@ -14,22 +14,22 @@ public class PathFinder
         openList.Add(start);
         while(openList.Count > 0)
         {
-            GridTile currentGridTile = openList.OrderBy(x => x.F).First();
+            GridTile currentTile = openList.OrderBy(x => x.F).First();
 
-            openList.Remove(currentGridTile);
+            openList.Remove(currentTile);
 
-            if (!currentGridTile.isBlocked)
+            if (!currentTile.isOccupied)
             {
-                closedList.Add(currentGridTile);
+                closedList.Add(currentTile);
             }
 
-            if(currentGridTile.Equals(end))
+            if(currentTile.Equals(end))
             {
                 //finalize path
                 return getFinishedList(start, end);
             }
 
-            foreach (var tile in getNeighbourTiles(currentGridTile))
+            foreach (var tile in getNeighbourTiles(currentTile))
             {
                 if (closedList.Contains(tile))
                 {
@@ -39,7 +39,7 @@ public class PathFinder
                 tile.G = GetManhattenDistance(start, tile);
                 tile.H = GetManhattenDistance(end, tile);
 
-                tile.previous = currentGridTile;
+                tile.previous = currentTile;
 
 
                 if (!openList.Contains(tile))
@@ -64,7 +64,11 @@ public class PathFinder
             GridTile currentTile = openList[0];
 
             openList.Remove(currentTile);
-            closedList.Add(currentTile);
+
+            if (!currentTile.isOccupied)
+            {
+                closedList.Add(currentTile);
+            }
 
             foreach (var tile in getNeighbourTiles(currentTile))
             {

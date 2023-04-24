@@ -7,14 +7,14 @@ public class Character : MonoBehaviour
     [Tooltip("Character Name")] public string characterName;
     [Range(1, 6)] [Tooltip("How many tiles can this character move?")] public int movementRange = 3;
     [Tooltip("Is the Character actively selected?")] public bool isSelected;
+    [Tooltip("Int variable for if the character is friendly(0), neutral(1), or hostile(2).")] public int friendOrEnemy;
     [Space(10)]
 
     [Header("====== Grid Info ======")]
-    public Vector3Int gridPos;
-    public GameObject grid;
+    [Tooltip("Position of the player on the grid")] public Vector3Int gridPos;
+    [Tooltip("Reference to the grid")] public GameObject grid;
     private Tilemap t;
-    
-
+    public MapManager mapManager;
 
     //public UnityEvent unityEvent = new UnityEvent();
 

@@ -5,16 +5,16 @@ using UnityEngine.Tilemaps;
 
 public class CursorMovement : MonoBehaviour
 {
-    public float speed;
+    
+    [Header("===== Character Details =====")]
+    [Tooltip("Speed of the Character when they move")] public float speed;
+    [Space(10)]
 
-    public Tilemap tilemap;
-
-
+    [Header("===== Overlay Tile Stuff =====")]
     //TODO: No need for this to be a prefab. Maybe change how this works, maybe ask Nagy how we want to show highlighting
     public GameObject overlayTilePrefab;
     private GameObject overlayTile;
     public GameObject overlayTileContainer;
-
 
     private Character character;
     private PathFinder pathFinder;
@@ -22,6 +22,9 @@ public class CursorMovement : MonoBehaviour
 
     private List<GridTile> rangeTiles = new List<GridTile>();
 
+    [Space(10)]
+    [Header("===== References =====")]
+    public Tilemap tilemap;
     public MapManager mapManager;
 
     private void Start()
@@ -74,6 +77,7 @@ public class CursorMovement : MonoBehaviour
                             test.GetComponent<SpriteRenderer>().color = Color.magenta;
                         }
                     }
+                    //This is if we click on a tile behind a character.
                     else
                     {
                         generatePath(tilePos);
@@ -115,6 +119,9 @@ public class CursorMovement : MonoBehaviour
             path.Clear();
             path = pathFinder.findPath(mapManager.map[character.gridPos], mapManager.map[tilePos]);
             character.isSelected = false;
+
+            mapManager.updateBlockedStatus(character.gridPos, false);
+            mapManager.updateBlockedStatus(tilePos, true);
         }
     }
 
@@ -129,6 +136,7 @@ public class CursorMovement : MonoBehaviour
             character.updateGridPos(path[0].gridPosition);
             path.RemoveAt(0);
         }
+
     }
 
     //Retuns the current tile the cursor is hovering over as a Vector3Int position on the tilemap.

@@ -12,6 +12,8 @@ public class MapManager : MonoBehaviour
 
     public Dictionary<Vector3Int, GridTile> map;
 
+    public GameObject[] characters;
+
     private void Awake()
     {
         if(_instance != null && _instance != this)
@@ -47,5 +49,23 @@ public class MapManager : MonoBehaviour
                 }
             }
         }
+
+        characters = GameObject.FindGameObjectsWithTag("Character");
+
+        foreach (GameObject character in characters)
+        {
+            updateBlockedStatus(character.GetComponent<Character>().gridPos, true);
+        }
+    }
+
+    public void updateBlockedStatus(Vector3Int location, bool status)
+    {
+        map[location].isOccupied = status;
+        
+        /**
+        foreach(GameObject character in characters)
+        {
+            map[character.GetComponent<Character>().gridPos].isOccupied = true;
+        }*/
     }
 }
