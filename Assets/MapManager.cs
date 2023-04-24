@@ -2,18 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Linq;
 
 public class MapManager : MonoBehaviour
 {
     private static MapManager _instance;
 
-    public GameObject overlayTilePrefab;
-
-    public GameObject overlayCountainer;
-
-
     public static MapManager Instance { get { return _instance; } }
-    
+
+    public Dictionary<Vector3Int, GridTile> map;
 
     private void Awake()
     {
@@ -32,9 +29,11 @@ public class MapManager : MonoBehaviour
     {
         var tileMap = gameObject.GetComponentInChildren<Tilemap>();
 
+        map = new Dictionary<Vector3Int, GridTile>();
+
         BoundsInt bounds = tileMap.cellBounds;
 
-        for(int x = bounds.min.x; x < bounds.max.x; x++)
+        for (int x = bounds.min.x; x < bounds.max.x; x++)
         {
             for (int y = bounds.min.y; y < bounds.max.y; y++)
             {
@@ -42,13 +41,11 @@ public class MapManager : MonoBehaviour
 
                 if (tileMap.HasTile(location))
                 {
-                    GameObject overlayTile = Instantiate(overlayTilePrefab, overlayCountainer.transform);
-                    var cellWorldPosition = tileMap.GetCellCenterWorld(location);
+                    GridTile gridTile = new GridTile(location);
 
-                    overlayTile.transform.position = new Vector3(cellWorldPosition.x, cellWorldPosition.y, cellWorldPosition.z);
+                    map.Add(location, gridTile);
                 }
             }
         }
     }
-
 }

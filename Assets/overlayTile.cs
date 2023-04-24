@@ -10,7 +10,7 @@ public class overlayTile : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            gameObject.GetComponent<SpriteRenderer>().color = new Color(255, 255, 255, 0);
+            //gameObject.GetComponent<SpriteRenderer>().color = new Color(255, 255, 255, 0);
         }
     }
 }
