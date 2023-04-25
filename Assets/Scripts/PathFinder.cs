@@ -18,7 +18,7 @@ public class PathFinder
 
             openList.Remove(currentTile);
 
-            if (!currentTile.isOccupied)
+            if (!currentTile.isOccupied && currentTile.F < 100)
             {
                 closedList.Add(currentTile);
             }
@@ -53,39 +53,32 @@ public class PathFinder
     }
 
     //Returns a list of all GridTiles within a certain tile range (int range) from the center GridTile start
+
+    //Currently an issue with showing tiles you cannot get to due to person in way.
     public List<GridTile> getTilesInRange(GridTile start, int range)
     {
-        List<GridTile> openList = new List<GridTile>();
-        List<GridTile> closedList = new List<GridTile>();
-        openList.Add(start);
+        List<GridTile> inRangeTiles = new List<GridTile>();
+        inRangeTiles.Add(start);
+        int step = 0;
 
-        while (openList.Count > 0)
+        List<GridTile> previousStep = new List<GridTile>();
+        previousStep.Add(start);
+
+        while (step < range)
         {
-            GridTile currentTile = openList[0];
+            var surroundingTiles = new List<GridTile>();
 
-            openList.Remove(currentTile);
-
-            if (!currentTile.isOccupied)
+            foreach(var tile in previousStep)
             {
-                closedList.Add(currentTile);
+                surroundingTiles.AddRange(getNeighbourTiles(tile));
             }
 
-            foreach (var tile in getNeighbourTiles(currentTile))
-            {
-                if (closedList.Contains(tile))
-                {
-                    continue;
-                }
-
-                if (GetManhattenDistance(start, tile) <= range && !openList.Contains(tile))
-                {
-                    openList.Add(tile);
-                }
-
-            }
+            inRangeTiles.AddRange(surroundingTiles);
+            previousStep = surroundingTiles.Distinct().ToList();
+            step++;
         }
 
-        return closedList;
+        return inRangeTiles.Distinct().ToList();
     }
 
     private List<GridTile> getFinishedList(GridTile start, GridTile end)
@@ -128,19 +121,19 @@ public class PathFinder
 
         //Right
         Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
 
         //Left
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
 
         //Up
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
 
         //Down
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
 
         return neighbours;
     }

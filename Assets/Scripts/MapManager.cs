@@ -54,18 +54,12 @@ public class MapManager : MonoBehaviour
 
         foreach (GameObject character in characters)
         {
-            updateBlockedStatus(character.GetComponent<Character>().gridPos, true);
+            updateOccupiedStatus(character.GetComponent<Character>().gridPos, true);
         }
     }
 
-    public void updateBlockedStatus(Vector3Int location, bool status)
+    public void updateOccupiedStatus(Vector3Int location, bool status)
     {
         map[location].isOccupied = status;
-        
-        /**
-        foreach(GameObject character in characters)
-        {
-            map[character.GetComponent<Character>().gridPos].isOccupied = true;
-        }*/
     }
 }

@@ -73,8 +73,8 @@ public class CursorMovement : MonoBehaviour
 
                         foreach(var tile in rangeTiles)
                         {
-                            var test = Instantiate(overlayTilePrefab, tilemap.GetCellCenterWorld(tile.gridPosition), Quaternion.identity, overlayTileContainer.transform);
-                            test.GetComponent<SpriteRenderer>().color = Color.magenta;
+                            var oPrefab = Instantiate(overlayTilePrefab, tilemap.GetCellCenterWorld(tile.gridPosition), Quaternion.identity, overlayTileContainer.transform);
+                            oPrefab.GetComponent<SpriteRenderer>().color = character.highlightColor;
                         }
                     }
                     //This is if we click on a tile behind a character.
@@ -93,11 +93,7 @@ public class CursorMovement : MonoBehaviour
         //Player is hovering off the grid.
         else
         {
-            if (character != null)
-            {
-                character.isSelected = false;
-            }
-            overlayTile.GetComponent<SpriteRenderer>().color = new Color(0, 0, 0, 0);
+            
         }
 
         //If the path is greater than 0, and is within the character's movement radius, move along the path.
@@ -120,8 +116,8 @@ public class CursorMovement : MonoBehaviour
             path = pathFinder.findPath(mapManager.map[character.gridPos], mapManager.map[tilePos]);
             character.isSelected = false;
 
-            mapManager.updateBlockedStatus(character.gridPos, false);
-            mapManager.updateBlockedStatus(tilePos, true);
+            mapManager.updateOccupiedStatus(character.gridPos, false);
+            mapManager.updateOccupiedStatus(tilePos, true);
         }
     }
 

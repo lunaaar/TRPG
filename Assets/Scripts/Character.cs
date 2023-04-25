@@ -8,6 +8,7 @@ public class Character : MonoBehaviour
     [Range(1, 6)] [Tooltip("How many tiles can this character move?")] public int movementRange = 3;
     [Tooltip("Is the Character actively selected?")] public bool isSelected;
     [Tooltip("Int variable for if the character is friendly(0), neutral(1), or hostile(2).")] public int friendOrEnemy;
+    [Tooltip("Color of the range highlight")] public Color highlightColor;
     [Space(10)]
 
     [Header("====== Grid Info ======")]
