@@ -17,19 +17,19 @@ public class Character : MonoBehaviour
     private Tilemap t;
     public MapManager mapManager;
 
-    //public UnityEvent unityEvent = new UnityEvent();
 
-    private void Start()
+    private void Awake()
     {
-        // I am tired and its midnight, this has something to do with tile anchors. I think we just need to move them down so they are all lined up properly.
-        // Idk, i have a tab open right now of it.
-        
-        
         t = grid.GetComponentInChildren<Tilemap>();
 
         //Alligns internal grid position with where it actually is;
         gridPos = t.WorldToCell(this.transform.position);
         this.transform.position = t.GetCellCenterWorld(gridPos);
+    }
+
+    private void Start()
+    {
+        
     }
 
     private void Update()

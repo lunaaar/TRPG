@@ -13,6 +13,13 @@ public class MapManager : MonoBehaviour
     public Dictionary<Vector3Int, GridTile> map;
 
     public GameObject[] characters;
+    private GameObject[] terrains;
+
+
+    //TEST
+    public Tilemap tilemap;
+    public Tile notOccupiedTile;
+    public Tile occupiedTile;
 
     private void Awake()
     {
@@ -46,20 +53,39 @@ public class MapManager : MonoBehaviour
                     GridTile gridTile = new GridTile(location);
 
                     map.Add(location, gridTile);
+                    updateOccupiedStatus(location, false);
                 }
             }
         }
 
+
+        //Sets all tiles characters are on to occupied.
         characters = GameObject.FindGameObjectsWithTag("Character");
 
         foreach (GameObject character in characters)
         {
             updateOccupiedStatus(character.GetComponent<Character>().gridPos, true);
         }
+
+
+        //Sets all tiles with any terrain / obstacle on to occupied.
+        terrains = GameObject.FindGameObjectsWithTag("Terrain");
+        foreach (GameObject terrain in terrains)
+        {
+            updateOccupiedStatus(terrain.GetComponent<Character>().gridPos, true);
+        }
     }
 
     public void updateOccupiedStatus(Vector3Int location, bool status)
     {
         map[location].isOccupied = status;
+        if (status)
+        {
+            tilemap.SetTile(location, occupiedTile);
+        }
+        else
+        {
+            tilemap.SetTile(location, notOccupiedTile);
+        }
     }
 }

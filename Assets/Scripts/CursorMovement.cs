@@ -16,10 +16,13 @@ public class CursorMovement : MonoBehaviour
     private GameObject overlayTile;
     public GameObject overlayTileContainer;
 
+
+
     private Character character;
+    [SerializeField] private bool characterIsSelected;
+    [SerializeField] private bool characterIsMoving;
     private PathFinder pathFinder;
     private List<GridTile> path = new List<GridTile>();
-
     private List<GridTile> rangeTiles = new List<GridTile>();
 
     [Space(10)]
@@ -32,6 +35,9 @@ public class CursorMovement : MonoBehaviour
         overlayTile = Instantiate(overlayTilePrefab);
 
         pathFinder = new PathFinder();
+
+        characterIsSelected = false;
+        characterIsMoving = false;
     }
 
     // LateUpdate is called once per frame after Update
@@ -56,37 +62,47 @@ public class CursorMovement : MonoBehaviour
                     Destroy(child.gameObject);
                 }
 
-                overlayTile.transform.position = tilePosWorld; 
-                
-                //We click on a tile with a character
+                overlayTile.transform.position = tilePosWorld;
+
+                //We click on a tile w/ a character on it.
                 if (characterHit.HasValue)
                 {
+                    characterIsMoving = false;
+                    
                     character = characterHit.Value.transform.gameObject.GetComponent<Character>();
 
-                    //We clicked on a character on their tile.
                     if (character.gridPos.Equals(tilePos))
                     {
-                        overlayTile.GetComponent<SpriteRenderer>().color = Color.green;
                         character.GetComponent<Character>().isSelected = true;
 
                         rangeTiles = pathFinder.getTilesInRange(mapManager.map[tilePos], character.movementRange);
 
-                        foreach(var tile in rangeTiles)
+                        characterIsSelected = true;
+
+                        foreach (var tile in rangeTiles)
                         {
                             var oPrefab = Instantiate(overlayTilePrefab, tilemap.GetCellCenterWorld(tile.gridPosition), Quaternion.identity, overlayTileContainer.transform);
                             oPrefab.GetComponent<SpriteRenderer>().color = character.highlightColor;
                         }
                     }
-                    //This is if we click on a tile behind a character.
                     else
                     {
+                        //If we are trying to pick a tile
                         generatePath(tilePos);
                     }
                 }
                 //We click on not a character
                 else
                 {
+                    //If we are trying to pick a tile
                     generatePath(tilePos);
+                    
+
+                    if(!characterIsSelected)
+                    {
+                        overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
+                    }
+
                 }
             }
         }
@@ -109,20 +125,32 @@ public class CursorMovement : MonoBehaviour
 
     private void generatePath(Vector3Int tilePos)
     {
-        overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
-        if (character != null && character.isSelected)
+        if (characterIsSelected && character.gridPos.Equals(tilePos))
         {
+            characterIsSelected = false;
+        }
+        
+        if (characterIsSelected && !character.gridPos.Equals(tilePos))
+        {
+            overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
+
             path.Clear();
             path = pathFinder.findPath(mapManager.map[character.gridPos], mapManager.map[tilePos]);
             character.isSelected = false;
-
+            characterIsSelected = false;
+        }
+        if (character != null && path.Count <= character.movementRange && path.Count > 0 && !characterIsMoving)
+        {
             mapManager.updateOccupiedStatus(character.gridPos, false);
             mapManager.updateOccupiedStatus(tilePos, true);
+
         }
     }
 
     private void moveAlongPath()
     {
+        characterIsMoving = true;
+        
         var step = speed * Time.deltaTime;
 
         character.transform.position = Vector2.MoveTowards(character.transform.position, tilemap.GetCellCenterWorld(path[0].gridPosition), step);
