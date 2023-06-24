@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 9125553234046830469}
   - component: {fileID: 9125553234046830470}
   - component: {fileID: 9125553234046830471}
-  - component: {fileID: 587658768047365836}
   m_Layer: 6
   m_Name: selectedTile
   m_TagString: Untagged
@@ -27,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9125553234046830472}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 14, y: -2.875, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -75,7 +74,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 2
-  m_Sprite: {fileID: 21300000, guid: 575f0fc02d4eff4418d5ae9ac57384bd, type: 3}
+  m_Sprite: {fileID: -1038397664, guid: 115340b22ae8a1b4b852e7e9b6693b32, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -115,15 +114,3 @@ PolygonCollider2D:
       - {x: -0.5, y: 0.125}
       - {x: 0, y: -0.1875}
       - {x: 0.5, y: 0.125}
---- !u!114 &587658768047365836
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9125553234046830472}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0835c2c4ea6c0d94598e4d203c34c887, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

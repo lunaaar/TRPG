@@ -12,17 +12,29 @@ public class MapManager : MonoBehaviour
 
     public Dictionary<Vector3Int, GridTile> map;
 
-    public GameObject[] characters;
-    private GameObject[] terrains;
+    public Character[] listOfCharacters;
 
+    private Obstacle[] obstacles;
 
-    //TEST
+    public GameObject[] objectives;
+    public CapturePoint[] capturePoints;
+
+    public PathFinder pathFinder;
+
+    //TEST; To be removed when colored display is not needed anymore.
     public Tilemap tilemap;
     public Tile notOccupiedTile;
     public Tile occupiedTile;
+    public Tile obstacleTile;
+    public Tile objectiveTile;
+
+    public Vector3Int[] testTerrainTiles;
+    public Tile testTerrainTile;
 
     private void Awake()
     {
+        DontDestroyOnLoad(this);
+        
         if(_instance != null && _instance != this)
         {
             Destroy(this.gameObject);
@@ -36,11 +48,22 @@ public class MapManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var tileMap = gameObject.GetComponentInChildren<Tilemap>();
+        pathFinder = new PathFinder();
+
+        listOfCharacters = (Character[])FindObjectsOfType(typeof(Character));
+        capturePoints = (CapturePoint[])FindObjectsOfType(typeof(CapturePoint));
+        obstacles = (Obstacle[])FindObjectsOfType(typeof(Obstacle));
 
         map = new Dictionary<Vector3Int, GridTile>();
 
-        BoundsInt bounds = tileMap.cellBounds;
+        setUpMap();
+    }
+
+    public void setUpMap()
+    {
+        //Sets up base map.
+
+        BoundsInt bounds = tilemap.cellBounds;
 
         for (int x = bounds.min.x; x < bounds.max.x; x++)
         {
@@ -48,44 +71,74 @@ public class MapManager : MonoBehaviour
             {
                 var location = new Vector3Int(x, y, 0);
 
-                if (tileMap.HasTile(location))
+                if (tilemap.HasTile(location))
                 {
                     GridTile gridTile = new GridTile(location);
-
                     map.Add(location, gridTile);
-                    updateOccupiedStatus(location, false);
+                    updateOccupiedStatus(location, "NotOccupied");
                 }
             }
         }
-
+        
+        //Sets all the objectives on the tilemap
+        foreach (CapturePoint cp in capturePoints)
+        {
+            cp.updateTilemap(map, tilemap);
+            updateOccupiedStatus(cp.gridPos, "Terrain");
+        }
 
         //Sets all tiles characters are on to occupied.
-        characters = GameObject.FindGameObjectsWithTag("Character");
-
-        foreach (GameObject character in characters)
+        foreach (Character character in listOfCharacters)
         {
-            updateOccupiedStatus(character.GetComponent<Character>().gridPos, true);
+            updateOccupiedStatus(character.gridPos, "Occupied");
+        }
+
+        //Sets all tiles with any obstacles on to occupied.
+        foreach (Obstacle obstacle in obstacles)
+        {
+            for(int i = 0; i < obstacle.size.x; i++)
+            {
+                for(int j = 0; j < obstacle.size.y; j++)
+                {
+                    updateOccupiedStatus(new Vector3Int(i + obstacle.gridPos.x, j + obstacle.gridPos.y), "Terrain");
+                }
+            }
+            
         }
 
 
-        //Sets all tiles with any terrain / obstacle on to occupied.
-        terrains = GameObject.FindGameObjectsWithTag("Terrain");
-        foreach (GameObject terrain in terrains)
+
+        //TEST STUFF
+        foreach(Vector3Int v in testTerrainTiles)
         {
-            updateOccupiedStatus(terrain.GetComponent<Character>().gridPos, true);
+            tilemap.SetTile(v, testTerrainTile);
+            map[v].movementPenalty = 2;
         }
     }
 
-    public void updateOccupiedStatus(Vector3Int location, bool status)
+    public void updateOccupiedStatus(Vector3Int location, string status)
     {
-        map[location].isOccupied = status;
-        if (status)
-        {
-            tilemap.SetTile(location, occupiedTile);
+        switch (status) {  
+            case "Objective":
+                tilemap.SetTile(location, objectiveTile);
+                map[location].status = "Objective";
+                break;
+            case "Occupied":
+                tilemap.SetTile(location, occupiedTile);
+                map[location].status = "Occupied";
+                break;
+            case "Terrain":
+                tilemap.SetTile(location, obstacleTile);
+                map[location].status = "Occupied";
+                break;
+            case "NotOccupied":
+                tilemap.SetTile(location, notOccupiedTile);
+                map[location].status = "NotOccupied";
+                break;
+            default:
+                break;
         }
-        else
-        {
-            tilemap.SetTile(location, notOccupiedTile);
-        }
+
+        map[location].movementPenalty = 1;
     }
 }

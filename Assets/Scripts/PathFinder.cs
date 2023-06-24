@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
+using UnityEngine.Tilemaps;
+
 public class PathFinder
 {
     //A* algorithm for player movement.
@@ -17,13 +20,9 @@ public class PathFinder
             GridTile currentTile = openList.OrderBy(x => x.F).First();
 
             openList.Remove(currentTile);
+            closedList.Add(currentTile);
 
-            if (!currentTile.isOccupied && currentTile.F < 100)
-            {
-                closedList.Add(currentTile);
-            }
-
-            if(currentTile.Equals(end))
+            if (currentTile.Equals(end))
             {
                 //finalize path
                 return getFinishedList(start, end);
@@ -52,10 +51,54 @@ public class PathFinder
         return new List<GridTile>();
     }
 
-    //Returns a list of all GridTiles within a certain tile range (int range) from the center GridTile start
+    public List<GridTile> findArrowPath(GridTile start, GridTile end)
+    {
+        List<GridTile> openList = new List<GridTile>();
+        List<GridTile> closedList = new List<GridTile>();
 
-    //Currently an issue with showing tiles you cannot get to due to person in way.
-    public List<GridTile> getTilesInRange(GridTile start, int range)
+        openList.Add(start);
+        while (openList.Count > 0)
+        {
+            GridTile currentTile = openList.OrderBy(x => x.F).First();
+
+            openList.Remove(currentTile);
+
+            if ((!currentTile.status.Equals("Occupied") && currentTile.F < 100))
+            {
+                closedList.Add(currentTile);
+            }
+
+            if (currentTile.Equals(end))
+            {
+                //finalize path
+                return getFinishedList(start, end);
+            }
+
+            foreach (var tile in getNeighbourAttackTiles(currentTile))
+            {
+                if (closedList.Contains(tile))
+                {
+                    continue;
+                }
+
+                tile.G = GetManhattenDistance(start, tile);
+                tile.H = GetManhattenDistance(end, tile);
+
+                tile.previous = currentTile;
+
+
+                if (!openList.Contains(tile))
+                {
+                    openList.Add(tile);
+                }
+            }
+        }
+
+        return new List<GridTile>();
+    }
+
+    //Returns a list of all GridTiles within a certain tile range (int range) from the center GridTile start
+    public List<GridTile> getTilesInRange(GridTile start, int range, Character character)
     {
         List<GridTile> inRangeTiles = new List<GridTile>();
         inRangeTiles.Add(start);
@@ -70,7 +113,7 @@ public class PathFinder
 
             foreach(var tile in previousStep)
             {
-                surroundingTiles.AddRange(getNeighbourTiles(tile));
+                surroundingTiles.AddRange(getNeighbourAttackTiles(tile));
             }
 
             inRangeTiles.AddRange(surroundingTiles);
@@ -108,7 +151,7 @@ public class PathFinder
         return finishedList;
     }
 
-    private int GetManhattenDistance(GridTile start, GridTile tile)
+    public int GetManhattenDistance(GridTile start, GridTile tile)
     {
         return Mathf.Abs(start.gridPosition.x - tile.gridPosition.x) + Mathf.Abs(start.gridPosition.y - tile.gridPosition.y);
     }
@@ -119,21 +162,48 @@ public class PathFinder
 
         List<GridTile> neighbours = new List<GridTile>();
 
+        //if (map.ContainsKey(locationToCheck) && (!map[locationToCheck].status.Equals("Occupied") || GetManhattenDistance(map[locationToCheck], map[character.gridPos]) == character.movementRange + character.weapons[0].attackRange)) neighbours.Add(map[locationToCheck]);
+
         //Right
         Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
 
         //Left
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
 
         //Up
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
 
         //Down
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].isOccupied) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
+
+        return neighbours;
+    }
+
+    public List<GridTile> getNeighbourAttackTiles(GridTile currentGridTile)
+    {
+        var map = MapManager.Instance.map;
+
+        List<GridTile> neighbours = new List<GridTile>();
+
+        //Right
+        Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        //Left
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        //Up
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        //Down
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
 
         return neighbours;
     }

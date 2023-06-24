@@ -8,24 +8,37 @@ public class GridTile
 
     [Header("====== A* Values ======")]
     public int G, H;
-    public int F { get { return G + H; } }
+    public int F { get { return G + H;} }
+
+    
+
+    [Header("===== Flood Value =====")]
+    public int value;
 
     //Set to true if anything is occupying the tile.
-    public bool isOccupied;
+    public string status;
 
     //Previous GridTile in a path.
     public GridTile previous;
 
     //Current position on the tilemap of the GridTile.
     public Vector3Int gridPosition;
-    
+
+
+    public int movementPenalty;
+
     public GridTile(Vector3Int gP)
     {
         gridPosition = gP;
     }
     
-    public void setBlockedStatus(bool status)
+    public void setBlockedStatus(string s)
     {
-        isOccupied = status;
+        this.status = s;
+    }
+
+    public override string ToString()
+    {
+        return "Tile @: " + gridPosition + "\n" + "F=" + F + "\n" + "G=" + G + "\n" + "H=" + H;
     }
 }

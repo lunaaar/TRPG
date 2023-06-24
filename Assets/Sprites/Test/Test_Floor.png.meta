@@ -275,8 +275,8 @@ TextureImporter:
       name: Test_Floor_8
       rect:
         serializedVersion: 2
-        x: 0
-        y: 80
+        x: 96
+        y: 96
         width: 16
         height: 16
       alignment: 0
@@ -296,7 +296,7 @@ TextureImporter:
       name: Test_Floor_9
       rect:
         serializedVersion: 2
-        x: 32
+        x: 0
         y: 80
         width: 16
         height: 16
@@ -317,8 +317,8 @@ TextureImporter:
       name: Test_Floor_10
       rect:
         serializedVersion: 2
-        x: 0
-        y: 64
+        x: 32
+        y: 80
         width: 16
         height: 16
       alignment: 0
@@ -338,8 +338,8 @@ TextureImporter:
       name: Test_Floor_11
       rect:
         serializedVersion: 2
-        x: 32
-        y: 48
+        x: 64
+        y: 80
         width: 16
         height: 16
       alignment: 0
@@ -359,8 +359,8 @@ TextureImporter:
       name: Test_Floor_12
       rect:
         serializedVersion: 2
-        x: 0
-        y: 32
+        x: 96
+        y: 80
         width: 16
         height: 16
       alignment: 0
@@ -380,8 +380,8 @@ TextureImporter:
       name: Test_Floor_13
       rect:
         serializedVersion: 2
-        x: 32
-        y: 16
+        x: 0
+        y: 64
         width: 16
         height: 16
       alignment: 0
@@ -393,6 +393,216 @@ TextureImporter:
       bones: []
       spriteID: a2d85283bfccbd64291d9322b6974b25
       internalID: 11383254
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_14
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eeab5766205536145a269b6d76c28746
+      internalID: -746553142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_15
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be7c2495301543f40bbf37957a6d9568
+      internalID: -168168197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_16
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc60100a0e1e2544695af9492e4b0986
+      internalID: 1502094143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_17
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3b553c7ac35e0f04a83343260afa90b2
+      internalID: 72714561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_18
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 932c24aa553cc214896acd8a2d8ab829
+      internalID: -1674855398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_19
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 32
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea0663e70d0232e41afcedbb3bfd477e
+      internalID: -2096901104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_20
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4cac7133b3f229842be86b3a99aac6fd
+      internalID: 1127296484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_21
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 16
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c55257c6216488547ad5b9d61aa99676
+      internalID: 391755052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_22
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 16
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ed6ba450f985e4b44811157234e44059
+      internalID: -2021711154
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Test_Floor_23
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 01b7dec7a3118ee4295c7d6bd0449919
+      internalID: -235109699
       vertices: []
       indices: 
       edges: []
@@ -409,18 +619,28 @@ TextureImporter:
     secondaryTextures: []
     nameFileIdTable:
       Test_Floor_5: -46090237
+      Test_Floor_14: -746553142
+      Test_Floor_23: -235109699
       Test_Floor_8: -547666053
+      Test_Floor_16: 1502094143
       Test_Floor_0: 1421887249
+      Test_Floor_18: -1674855398
       Test_Floor_6: 1348950887
       Test_Floor_13: 11383254
+      Test_Floor_19: -2096901104
       Test_Floor_11: -1997115918
+      Test_Floor_22: -2021711154
+      Test_Floor_21: 391755052
       Test_Floor_4: -1677866509
       Test_Floor_9: -327112767
       Test_Floor_1: 293840933
+      Test_Floor_17: 72714561
+      Test_Floor_15: -168168197
       Test_Floor_10: -143564412
       Test_Floor_3: -249980889
       Test_Floor_2: -1906386373
       Test_Floor_7: -655468689
+      Test_Floor_20: 1127296484
       Test_Floor_12: 1104431847
   spritePackingTag: 
   pSDRemoveMatte: 0
