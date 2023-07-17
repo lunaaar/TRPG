@@ -11,12 +11,14 @@ public class CursorMovement : MonoBehaviour
     [Tooltip("Speed of the Character when they move")] public float speed;
     [Space(10)]
 
+    [Header("===== Cursor Sprite References =====")]
+    [SerializeField] private Sprite mapCursor;
+    [SerializeField] private Sprite voidCursor;
+
     [Header("===== Overlay Tile Stuff =====")]
     //TODO: No need for this to be a prefab. Maybe change how this works, maybe ask Nagy how we want to show highlighting
     public GameObject overlayTilePrefab;
     private GameObject overlayTile;
-    public GameObject moveTileContainer;
-    public GameObject attackTileContainer;
 
     //Character Stuff
     [Header("===== Character Bools =====")]
@@ -29,16 +31,23 @@ public class CursorMovement : MonoBehaviour
 
     private List<GridTile> arrowPath = new List<GridTile>();
 
-    private List<GridTile> movementRangeTiles = new List<GridTile>();
-
     [Space(10)]
     [Header("===== References =====")]
     public Tilemap tilemap;
     public MapManager mapManager;
+    public GameManager gamemanager;
 
-    [Space(5)]
+    [Space(7)]
     public Tilemap arrowTilemap;
     public RuleTile arrowTile;
+
+    [Space(7)]
+    public Tilemap movementRangeTilemap;
+    public RuleTile movementTile;
+
+    [Space(7)]
+    public Tilemap attackRangeTilemap;
+    public RuleTile attackTile;
 
     private void Start()
     {
@@ -62,15 +71,21 @@ public class CursorMovement : MonoBehaviour
         //We are not hovering over a tile.
         if (tilePos == Vector3Int.back)
         {
+            this.GetComponent<SpriteRenderer>().sprite = voidCursor;
             return;
+        }
+        else
+        {
+            this.GetComponent<SpriteRenderer>().sprite = mapCursor;
         }
 
         // Gets the center of the current tile in world space.
         var tilePosWorld = tilemap.GetCellCenterWorld(tilePos);
-        this.transform.position = tilePosWorld;
+        //this.transform.position = tilePosWorld;
 
         if (characterIsSelected)
         {
+            //Resets the arrow to new tile.
             arrowTilemap.ClearAllTiles();
             var ap = generateArrowPath(tilePos);
 
@@ -88,21 +103,13 @@ public class CursorMovement : MonoBehaviour
         {
             arrowTilemap.ClearAllTiles();
         }
-
-        if (Input.GetMouseButtonDown(0))
+        // if(Input.GetMouseButtonDown(0))
+        if (UserInput.instance.selectInput)
         {
-            foreach (Transform child in moveTileContainer.transform)
-            {
-                Destroy(child.gameObject);
-            }
-
-            foreach (Transform child in attackTileContainer.transform)
-            {
-                Destroy(child.gameObject);
-            }
-
-
             overlayTile.transform.position = tilePosWorld;
+
+            movementRangeTilemap.ClearAllTiles();
+            attackRangeTilemap.ClearAllTiles();
 
             //We click on a tile w/ a character on it.
             if (characterHit.HasValue)
@@ -115,26 +122,31 @@ public class CursorMovement : MonoBehaviour
 
                 if (character.gridPos.Equals(tilePos))
                 {
-                    //We click on a Friendly Character.
-                    if (character.alignment == Character.AlignmentStatus.Friendly)
-                    {
-                        character.isSelected = true;
-                        characterIsSelected = true;
+                    switch (character.alignment) {
+                        case (Character.AlignmentStatus.Friendly):
+                            character.isSelected = true;
+                            characterIsSelected = true;
 
-                        selectedCharacter = character;
+                            selectedCharacter = character;
 
-                        character.showMovementAndAttackRange(overlayTilePrefab, moveTileContainer, attackTileContainer, mapManager);
-                    }
-                    //We click on an Enemy Character.
-                    else if (character.alignment == Character.AlignmentStatus.Enemy)
-                    {
-                        if (characterIsSelected && selectedCharacter.attackTiles.Contains(mapManager.map[character.gridPos]))
-                        {
-                            Debug.Log(selectedCharacter.characterName + " attacked " + character.characterName);
-                            selectedCharacter.weapons[0].Attack(character);
-                            character = selectedCharacter;
-                            generatePath(arrowPath[arrowPath.Count - (character.weapons[0].attackRange + 1)].gridPosition);
-                        }
+                            gamemanager.showGUI(selectedCharacter);
+
+                            character.showMovementAndAttackRange(movementRangeTilemap, movementTile, attackRangeTilemap, attackTile, mapManager);
+                            
+                            break;
+                        case (Character.AlignmentStatus.Enemy):
+
+                            if (characterIsSelected && selectedCharacter.attackTiles.Contains(mapManager.map[character.gridPos]))
+                            {
+                                Debug.Log(selectedCharacter.characterName + " attacked " + character.characterName);
+                                selectedCharacter.weapons[0].Attack(character);
+                                character = selectedCharacter;
+                                generatePath(arrowPath[Mathf.Max(arrowPath.Count - (character.weapons[0].attackRange + 1),0)].gridPosition);
+                            }
+
+                            break;
+                        default:
+                            break;
                     }
                 }
                 else
@@ -251,12 +263,19 @@ public class CursorMovement : MonoBehaviour
     //Retuns the current tile the cursor is hovering over as a Vector3Int position on the tilemap.
     public Vector3Int getHoverTile()
     {
-        var mousPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //var mousPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        
+        //currently bugged with controller input
+        var mousPos = Camera.main.ScreenToWorldPoint(UserInput.instance.moveInput);
         var mousPos2D = new Vector2(mousPos.x, mousPos.y);
+
+        //this.transform.position = mousPos2D;
 
         Vector3Int tilePos = tilemap.WorldToCell(mousPos2D);
 
         Tile tile = tilemap.GetTile<Tile>(tilePos);
+
+        this.transform.position = tilemap.GetCellCenterWorld(tilePos);
 
         if (tile != null)
         {

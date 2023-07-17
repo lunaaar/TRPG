@@ -19,9 +19,6 @@ public class Character : MonoBehaviour
 
     [Space(5)]
     [Header("====== Character Info ======")]
-
-    [Tooltip("Color of the range highlight")] public Color highlightColor;
-    [Tooltip("Color of the attack range highlight")] public Color attackRangeColor;
     public List<GridTile> movementTiles;
     public List<GridTile> attackTiles;
     public enum AlignmentStatus { Friendly, Neutral, Enemy}
@@ -78,7 +75,6 @@ public class Character : MonoBehaviour
 
     public List<GridTile> getTilesInRange(int range, MapManager map)
     {
-        //GridTile start = new GridTile(gridPos);
         GridTile start = map.map[gridPos];
 
         List<GridTile> inRangeTiles = new List<GridTile>();
@@ -111,7 +107,7 @@ public class Character : MonoBehaviour
         return inRangeTiles.Distinct().ToList();
     }
 
-    public void showMovementAndAttackRange(GameObject overlayTilePrefab, GameObject moveTileContainer, GameObject attackTileContainer, MapManager mapManager)
+    public void showMovementAndAttackRange(Tilemap movementTilemap, RuleTile moveTile, Tilemap attackTilemap, RuleTile attackTile, MapManager mapManager)
     {
         GridTile start = mapManager.map[gridPos];
 
@@ -146,8 +142,7 @@ public class Character : MonoBehaviour
 
         foreach (var tile in movementTiles)
         {
-            var oPrefab = Instantiate(overlayTilePrefab, t.GetCellCenterWorld(tile.gridPosition), Quaternion.identity, moveTileContainer.transform);
-            oPrefab.GetComponent<SpriteRenderer>().color = highlightColor;
+            movementTilemap.SetTile(tile.gridPosition, moveTile);
         }
 
         // Attack Range time
@@ -194,8 +189,7 @@ public class Character : MonoBehaviour
 
         foreach (var tile in attackTiles)
         {
-            var oPrefab = Instantiate(overlayTilePrefab, t.GetCellCenterWorld(tile.gridPosition), Quaternion.identity, attackTileContainer.transform);
-            oPrefab.GetComponent<SpriteRenderer>().color = attackRangeColor;
+            attackTilemap.SetTile(tile.gridPosition, attackTile);
         }
 
     }

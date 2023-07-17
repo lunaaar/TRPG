@@ -106,8 +106,6 @@ public class MapManager : MonoBehaviour
             
         }
 
-
-
         //TEST STUFF
         foreach(Vector3Int v in testTerrainTiles)
         {
