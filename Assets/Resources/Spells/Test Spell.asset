@@ -9,9 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7162b1ca870b0c141ae17251ad56b3d7, type: 3}
-  m_Name: Shortsword
+  m_Script: {fileID: 11500000, guid: cdfec471022e7a14cb09818797e65a51, type: 3}
+  m_Name: Test Spell
   m_EditorClassIdentifier: 
-  name: Shortsword
-  attackRange: 1
-  weaponDamage: 2
+  name: Test Spell
+  range: maxHealth

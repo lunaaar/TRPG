@@ -16,7 +16,7 @@ public class CursorMovement : MonoBehaviour
     [SerializeField] private Sprite voidCursor;
 
     [Header("===== Overlay Tile Stuff =====")]
-    //TODO: No need for this to be a prefab. Maybe change how this works, maybe ask Nagy how we want to show highlighting
+    //TODO: No need for this to be a prefab.
     public GameObject overlayTilePrefab;
     private GameObject overlayTile;
 
@@ -49,6 +49,9 @@ public class CursorMovement : MonoBehaviour
     public Tilemap attackRangeTilemap;
     public RuleTile attackTile;
 
+    [Space(7)]
+    public Tile healTile;
+
     private void Start()
     {
         overlayTile = Instantiate(overlayTilePrefab);
@@ -58,6 +61,10 @@ public class CursorMovement : MonoBehaviour
 
         characterIsSelected = false;
         characterIsMoving = false;
+
+        var filler = tilemap.CellToWorld(new Vector3Int(0, 0));
+        this.transform.position = tilemap.GetCellCenterWorld(new Vector3Int((int)filler.x, (int)filler.y));
+        this.GetComponent<SpriteRenderer>().sprite = mapCursor;
     }
 
     // LateUpdate is called once per frame after Update
@@ -81,8 +88,8 @@ public class CursorMovement : MonoBehaviour
 
         // Gets the center of the current tile in world space.
         var tilePosWorld = tilemap.GetCellCenterWorld(tilePos);
-        //this.transform.position = tilePosWorld;
 
+        //Process for displaying the movement path the character would take given current tilePos.
         if (characterIsSelected)
         {
             //Resets the arrow to new tile.
@@ -103,7 +110,7 @@ public class CursorMovement : MonoBehaviour
         {
             arrowTilemap.ClearAllTiles();
         }
-        // if(Input.GetMouseButtonDown(0))
+
         if (UserInput.instance.selectInput)
         {
             overlayTile.transform.position = tilePosWorld;
@@ -111,17 +118,28 @@ public class CursorMovement : MonoBehaviour
             movementRangeTilemap.ClearAllTiles();
             attackRangeTilemap.ClearAllTiles();
 
-            //We click on a tile w/ a character on it.
+            //We click on a character on it.
             if (characterHit.HasValue)
-            { 
+            {
                 overlayTile.GetComponent<SpriteRenderer>().color = Color.clear;
                 
                 characterIsMoving = false;
 
                 character = characterHit.Value.transform.gameObject.GetComponent<Character>();
 
+                //if we are hovering over the tile the character is on (mostly here for if we are trying to click on the tile behind a character)
                 if (character.gridPos.Equals(tilePos))
                 {
+                    //If we click on the same character twice
+                    if (character == selectedCharacter)
+                    {
+                        movementRangeTilemap.ClearAllTiles();
+                        attackRangeTilemap.ClearAllTiles();
+                        selectedCharacter = null;
+                        characterIsSelected = false;
+                        return;
+                    }
+
                     switch (character.alignment) {
                         case (Character.AlignmentStatus.Friendly):
                             character.isSelected = true;
@@ -139,7 +157,7 @@ public class CursorMovement : MonoBehaviour
                             if (characterIsSelected && selectedCharacter.attackTiles.Contains(mapManager.map[character.gridPos]))
                             {
                                 Debug.Log(selectedCharacter.characterName + " attacked " + character.characterName);
-                                selectedCharacter.weapons[0].Attack(character);
+                                selectedCharacter.weapons[0].Attack(selectedCharacter.characterStats, character);
                                 character = selectedCharacter;
                                 generatePath(arrowPath[Mathf.Max(arrowPath.Count - (character.weapons[0].attackRange + 1),0)].gridPosition);
                             }
@@ -263,13 +281,8 @@ public class CursorMovement : MonoBehaviour
     //Retuns the current tile the cursor is hovering over as a Vector3Int position on the tilemap.
     public Vector3Int getHoverTile()
     {
-        //var mousPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        
-        //currently bugged with controller input
         var mousPos = Camera.main.ScreenToWorldPoint(UserInput.instance.moveInput);
         var mousPos2D = new Vector2(mousPos.x, mousPos.y);
-
-        //this.transform.position = mousPos2D;
 
         Vector3Int tilePos = tilemap.WorldToCell(mousPos2D);
 
@@ -289,10 +302,12 @@ public class CursorMovement : MonoBehaviour
     //  * Could possibly change to be not a raycast but not sure if needed.
     public RaycastHit2D? GetFocusedOnCharacter()
     {
-        Vector3 mousPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 mousPos = Camera.main.ScreenToWorldPoint(UserInput.instance.moveInput);
         Vector2 mousPos2D = new Vector2(mousPos.x, mousPos.y);
 
-        RaycastHit2D hit = Physics2D.Raycast(mousPos2D, Vector2.zero, 1, LayerMask.GetMask("Character"));
+        Vector3Int tilePos = tilemap.WorldToCell(mousPos2D);
+
+        RaycastHit2D hit = Physics2D.Raycast(tilemap.GetCellCenterWorld(tilePos), Vector2.zero, 1, LayerMask.GetMask("Character"));
 
         if (hit)
         {

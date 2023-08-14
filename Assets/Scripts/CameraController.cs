@@ -22,14 +22,16 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        /**
         if (!GameManager.gameIsPaused)
         {
             cameraPosition = camera.transform.position;
 
-            handleCameraMovement();
-        }
+            //handleCameraMovement();
+        }*/
     }
 
+    //Needs to rewrite
     void handleCameraMovement()
     {
         if (useKeyboardInput)

@@ -10,9 +10,14 @@ public class Character : MonoBehaviour
     [Header("====== Character Stats ======")]
     [Tooltip("Character Name")] public string characterName;
     [Range(1, 6)] [Tooltip("How many tiles can this character move?")] public int movementRange = 3;
-    public float currentHealth = 10;
-    public float maxHealth = 10;
+
+    public Stats characterStats;
+
     public List<Weapon> weapons;
+    [Space(2)]
+    public List<Ability> abilities;
+    [Space(2)]
+    public List<Spell> spells;
 
     [Space(2)]
     [Tooltip("Is the Character actively selected?")] public bool isSelected;
@@ -35,8 +40,9 @@ public class Character : MonoBehaviour
 
     private void Awake()
     {
+        //Set Up Heathbar
         slider = this.GetComponentInChildren<Slider>();
-        slider.maxValue = maxHealth;
+        slider.maxValue = characterStats.contains("maxHealth");
         updateHealthBar();
 
         t = grid.GetComponentInChildren<Tilemap>();
@@ -70,7 +76,7 @@ public class Character : MonoBehaviour
 
     public void updateHealthBar()
     {
-        slider.value = currentHealth;
+        slider.value = characterStats.contains("currentHealth");
     }
 
     public List<GridTile> getTilesInRange(int range, MapManager map)
@@ -191,6 +197,5 @@ public class Character : MonoBehaviour
         {
             attackTilemap.SetTile(tile.gridPosition, attackTile);
         }
-
     }
 }

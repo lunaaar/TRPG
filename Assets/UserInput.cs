@@ -6,68 +6,118 @@ using UnityEngine.InputSystem;
 public class UserInput : MonoBehaviour
 {
     public static UserInput instance;
-
+    [Range(0, 2)] public float sensitivity;
     public Vector2 moveInput { get; private set; }
+    [SerializeField] private Vector2 moveDirection;
+
     public bool selectInput { get; private set; }
-
+    public bool menuInput { get; private set; }
     private PlayerInput playerInput;
-
-    private InputAction moveAction;
     private InputAction selectAction;
-    
+
+    [Space(7)]
+
+    [Header("===== Audio Clips =====")]
+
+    [SerializeField] private AudioSource bookOpen;
+    [SerializeField] private AudioSource bookClose;
+    [SerializeField] private AudioSource pageSound;
+
     private void Awake()
     {
-        if(instance == null)
-        {
-            instance = this;
-        }
+        DontDestroyOnLoad(this);
+
+        if (instance == null) instance = this;
 
         playerInput = GetComponent<PlayerInput>();
 
         setupInputActions();
     }
-
-    void Update()
-    {
-        updateInputs();
-    }
-
     private void setupInputActions()
     {
-        moveAction = playerInput.actions["LookAround"];
+        //moveAction = playerInput.actions["LookAround"];
         selectAction = playerInput.actions["Select"];
+
+        moveInput = new Vector2(590, 274);
     }
 
-    private void updateInputs()
+    private void Update()
     {
-        if(playerInput.currentControlScheme == "Keyboard")
+        if (playerInput.currentActionMap.name == "Gameplay")
         {
-            moveInput = moveAction.ReadValue<Vector2>();
-            selectInput = selectAction.WasPressedThisFrame();
+            UpdateGameplayInputs();
+            Move(moveDirection);
         }
-        else if(playerInput.currentControlScheme == "Gamepad")
-        {
-            var vector = moveAction.ReadValue<Vector2>();
+    }
 
-            if (Mathf.Abs(vector.x) > 0 && Mathf.Abs(vector.y) == 0)
-            {
-                vector.y = vector.x * -1;
-                Debug.Log("TEST");
-            }
-            else if (Mathf.Abs(vector.y) > 0)
-            {
-                vector.x = vector.y;
-            }
-            Debug.Log(vector);
-            moveInput += moveAction.ReadValue<Vector2>();
-            selectInput = selectAction.WasPressedThisFrame();
+    //Context function called through event system to update inputs.
+    public void OnMove(InputAction.CallbackContext context)
+    {
+        moveDirection = playerInput.actions["LookAround"].ReadValue<Vector2>();
+    }
+
+    //Function called every frame to actually adjust character based on inputs.
+    private void Move(Vector2 move)
+    {
+        if (playerInput.currentControlScheme == "Mouse")
+        {
+            moveInput = move;
         }
+        else if (playerInput.currentControlScheme == "Gamepad" || playerInput.currentControlScheme == "Keyboard")
+        {
+            moveInput += move * sensitivity;
+        }
+    }
+
+    private void UpdateGameplayInputs()
+    {
+        selectInput = selectAction.WasPressedThisFrame();
+    }
+
+    public void OpenUI(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
         
+        if (PauseMenu.gameIsPaused)
+        {
+            playerInput.SwitchCurrentActionMap("Gameplay");
+            bookClose.Play();
+            PauseMenu.instance.Resume();
+        }
+        else
+        {
+            playerInput.SwitchCurrentActionMap("MenuNav");
+            bookOpen.Play();
+            PauseMenu.instance.Pause();
+        }
     }
 
-    public Vector3Int getHoverTile()
+    IEnumerator nextPage()
     {
-        return Vector3Int.zero;
+        pageSound.Play();
+        PauseMenu.instance.nextPage();
+        yield return null;
+    }
+
+    public void nextPageAction(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        StartCoroutine(nextPage());
+        StopCoroutine(nextPage());
+    }
+
+    IEnumerator previousPage()
+    {
+        pageSound.Play();
+        PauseMenu.instance.previousPage();
+        yield return null;
+    }
+
+    public void previousPageAction(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        StartCoroutine(previousPage());
+        StopCoroutine(previousPage());
     }
 
     void RemapButtonClicked(InputAction actionToRebind)

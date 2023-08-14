@@ -6,9 +6,9 @@ using System.Linq;
 
 public class MapManager : MonoBehaviour
 {
-    private static MapManager _instance;
+    private static MapManager instance;
 
-    public static MapManager Instance { get { return _instance; } }
+    public static MapManager Instance { get { return instance; } }
 
     public Dictionary<Vector3Int, GridTile> map;
 
@@ -35,13 +35,13 @@ public class MapManager : MonoBehaviour
     {
         DontDestroyOnLoad(this);
         
-        if(_instance != null && _instance != this)
+        if(instance != null && instance != this)
         {
             Destroy(this.gameObject);
         }
         else
         {
-            _instance = this;
+            instance = this;
         }
     }
 
