@@ -35,7 +35,6 @@ public class UserInput : MonoBehaviour
     }
     private void setupInputActions()
     {
-        //moveAction = playerInput.actions["LookAround"];
         selectAction = playerInput.actions["Select"];
 
         moveInput = new Vector2(590, 274);

@@ -158,7 +158,7 @@ public class PathFinder
 
     public List<GridTile> getNeighbourTiles(GridTile currentGridTile)
     {
-        var map = MapManager.Instance.map;
+        var map = MapManager.instance.map;
 
         List<GridTile> neighbours = new List<GridTile>();
 
@@ -185,7 +185,7 @@ public class PathFinder
 
     public List<GridTile> getNeighbourAttackTiles(GridTile currentGridTile)
     {
-        var map = MapManager.Instance.map;
+        var map = MapManager.instance.map;
 
         List<GridTile> neighbours = new List<GridTile>();
 

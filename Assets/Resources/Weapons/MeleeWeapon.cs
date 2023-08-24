@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu]
+[CreateAssetMenu(fileName = "new_base_melee_weapon", menuName = "ScriptableObjects/Weapons/MeleeWeapon")]
 public class MeleeWeapon : Weapon
 {
     public override void Attack(Stats stats, Character target)

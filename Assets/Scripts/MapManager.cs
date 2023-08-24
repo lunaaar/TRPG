@@ -6,27 +6,44 @@ using System.Linq;
 
 public class MapManager : MonoBehaviour
 {
-    private static MapManager instance;
-
-    public static MapManager Instance { get { return instance; } }
+    public static MapManager instance;
 
     public Dictionary<Vector3Int, GridTile> map;
-
-    public Character[] listOfCharacters;
 
     private Obstacle[] obstacles;
 
     public GameObject[] objectives;
     public CapturePoint[] capturePoints;
 
-    public PathFinder pathFinder;
+    //public PathFinder pathFinder;
 
-    //TEST; To be removed when colored display is not needed anymore.
+    /*
+     * Test Coloring, should make this option permanent but only in a "debug mode"
+     * - The following will be the rubric for what the colors associatedly mean.
+     * 
+     * Rubric:
+     * 
+     * - White     = base floor
+     * 
+     * - Green     = notOccupied
+     * - Red       = occupied
+     * - Dark Gray = obstacle
+     * - Pink      = objective space
+     * 
+     * - Brown     = difficult terrain (not occupied but moveMod != 1)
+     * 
+     * Unused Colors:
+     * - Orange
+     * - Blue
+     * - Bright Pink
+     * - Purple
+     * 
+     */
     public Tilemap tilemap;
-    public Tile notOccupiedTile;
-    public Tile occupiedTile;
-    public Tile obstacleTile;
-    public Tile objectiveTile;
+    [SerializeField] private Tile notOccupiedTile;
+    [SerializeField] private Tile occupiedTile;
+    [SerializeField] private Tile obstacleTile;
+    [SerializeField] private Tile objectiveTile;
 
     public Vector3Int[] testTerrainTiles;
     public Tile testTerrainTile;
@@ -34,23 +51,14 @@ public class MapManager : MonoBehaviour
     private void Awake()
     {
         DontDestroyOnLoad(this);
-        
-        if(instance != null && instance != this)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            instance = this;
-        }
+
+        if (instance == null) instance = this;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        pathFinder = new PathFinder();
-
-        listOfCharacters = (Character[])FindObjectsOfType(typeof(Character));
+        //pathFinder = new PathFinder();
         capturePoints = (CapturePoint[])FindObjectsOfType(typeof(CapturePoint));
         obstacles = (Obstacle[])FindObjectsOfType(typeof(Obstacle));
 
@@ -88,7 +96,7 @@ public class MapManager : MonoBehaviour
         }
 
         //Sets all tiles characters are on to occupied.
-        foreach (Character character in listOfCharacters)
+        foreach (Character character in GameManager.instance.listOfAllCharacters)
         {
             updateOccupiedStatus(character.gridPos, "Occupied");
         }
@@ -96,14 +104,11 @@ public class MapManager : MonoBehaviour
         //Sets all tiles with any obstacles on to occupied.
         foreach (Obstacle obstacle in obstacles)
         {
-            for(int i = 0; i < obstacle.size.x; i++)
+            updateOccupiedStatus(obstacle.gridPos, "Terrain");
+            foreach (Vector3Int pos in obstacle.usedSpaces)
             {
-                for(int j = 0; j < obstacle.size.y; j++)
-                {
-                    updateOccupiedStatus(new Vector3Int(i + obstacle.gridPos.x, j + obstacle.gridPos.y), "Terrain");
-                }
+                updateOccupiedStatus(pos + obstacle.gridPos, "Terrain");
             }
-            
         }
 
         //TEST STUFF

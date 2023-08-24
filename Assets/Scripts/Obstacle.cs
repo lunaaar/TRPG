@@ -5,9 +5,17 @@ using UnityEngine.Tilemaps;
 
 public class Obstacle : MonoBehaviour
 {
-    //Note to self:
-    //the game thinks of the size as originating from the bottom right, the tile most towards the camera.
-    public Vector2Int size;
+    /**
+     * This list is used as a vector based list to represent what spaces the Obstacle
+     * takes up on the map originated from 0,0 being the center point of the object.
+     * 
+     * Note for ease of use:
+     * <1,0>  is for up, right
+     * <0,1>  is for up, left
+     * <-1,0> is for down left
+     * <0,-1> is for down right
+     */
+    public List<Vector2Int> usedSpaces;
     
     [Header("====== Grid Info ======")]
     [Tooltip("Position of the player on the grid")] public Vector3Int gridPos;

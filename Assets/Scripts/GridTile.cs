@@ -10,8 +10,6 @@ public class GridTile
     public int G, H;
     public int F { get { return G + H;} }
 
-    
-
     [Header("===== Flood Value =====")]
     public int value;
 
@@ -23,7 +21,6 @@ public class GridTile
 
     //Current position on the tilemap of the GridTile.
     public Vector3Int gridPosition;
-
 
     public int movementPenalty;
 

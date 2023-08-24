@@ -3,30 +3,51 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager instance;
+    
     public List<Character> combatOrder;
+
+    public List<Character> listOfAllCharacters;
+    public List<Character> listOfAllFriendly;
+    public List<Character> listOfAllEnemies;
+
+    public TextMeshProUGUI tempText;
 
 
     private void Awake()
     {
         DontDestroyOnLoad(this);
+
+        if (instance == null) instance = this;
     }
 
     private void Start()
     {
         //Cursor.visible = false;
+        listOfAllCharacters = ((Character[])FindObjectsOfType(typeof(Character))).ToList();
+        listOfAllFriendly = new List<Character>();
+        listOfAllEnemies = new List<Character>();
+
+        foreach(Character c in listOfAllCharacters)
+        {
+            if (c.alignment == Character.AlignmentStatus.Friendly) listOfAllFriendly.Add(c);
+            else if (c.alignment == Character.AlignmentStatus.Enemy) listOfAllEnemies.Add(c);
+        }
+
         getCombatOrder();
     }
 
 
-    private void Update()
+    private void FixedUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            updateCombatOrder();
-        }
+        //Core Gameloop time.
+        //CursorMovement.instance.selectedCharacter = combatOrder[0];
+
+
     }
 
     public void showGUI(Character character)
@@ -38,6 +59,7 @@ public class GameManager : MonoBehaviour
     {
         combatOrder = new List<Character>(FindObjectsOfType<Character>());
         combatOrder = combatOrder.OrderByDescending(ch => ch.characterStats.contains("Speed")).ToList();
+         
     }
 
     public void updateCombatOrder()
@@ -45,5 +67,7 @@ public class GameManager : MonoBehaviour
         var character = combatOrder[0];
         combatOrder.Remove(combatOrder[0]);
         combatOrder.Add(character);
+
+        tempText.text = "Current Character: " + combatOrder[0].name;
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 
 public class CursorMovement : MonoBehaviour
 {
+    public static CursorMovement instance;
 
     [Header("===== Character Details =====")]
     [Tooltip("Speed of the Character when they move")] public float speed;
@@ -34,8 +35,6 @@ public class CursorMovement : MonoBehaviour
     [Space(10)]
     [Header("===== References =====")]
     public Tilemap tilemap;
-    public MapManager mapManager;
-    public GameManager gamemanager;
 
     [Space(7)]
     public Tilemap arrowTilemap;
@@ -54,6 +53,8 @@ public class CursorMovement : MonoBehaviour
 
     private void Start()
     {
+        if (instance == null) instance = this;
+        
         overlayTile = Instantiate(overlayTilePrefab);
         overlayTile.GetComponent<SpriteRenderer>().color = Color.clear;
 
@@ -89,6 +90,15 @@ public class CursorMovement : MonoBehaviour
         // Gets the center of the current tile in world space.
         var tilePosWorld = tilemap.GetCellCenterWorld(tilePos);
 
+
+        if (path.Count == 0) characterIsMoving = false;
+
+        if (characterIsMoving)
+        {
+            arrowTilemap.ClearAllTiles();
+            goto handle;
+        }
+
         //Process for displaying the movement path the character would take given current tilePos.
         if (characterIsSelected)
         {
@@ -97,7 +107,7 @@ public class CursorMovement : MonoBehaviour
             var ap = generateArrowPath(tilePos);
 
             if (ap.Sum(t => t.movementPenalty) <= character.movementRange + character.weapons[0].attackRange &&
-                selectedCharacter.attackTiles.Contains(mapManager.map[tilePos]) || selectedCharacter.movementTiles.Contains(mapManager.map[tilePos]))
+                selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]) || selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
             {
                 foreach (GridTile gt in arrowPath)
                 {
@@ -106,11 +116,112 @@ public class CursorMovement : MonoBehaviour
             }
         }
 
-        if (characterIsMoving)
+        //New stuff Starts Here
+
+        selectedCharacter = GameManager.instance.combatOrder[0];
+
+        if(selectedCharacter.alignment == Character.AlignmentStatus.Enemy)
         {
-            arrowTilemap.ClearAllTiles();
+            //DO ENEMY COMBAT HERE
+            // CALL SOME MENTHOD IN ENEMY
+            
+            GameManager.instance.updateCombatOrder();
+            goto handle;
         }
 
+        if (!UserInput.instance.selectInput) goto handle;
+
+
+        //If we click anywhere on the map;
+
+        overlayTile.transform.position = tilePosWorld;
+
+        movementRangeTilemap.ClearAllTiles();
+        attackRangeTilemap.ClearAllTiles();
+
+        //We click on a character
+        if (characterHit.HasValue)
+        {
+            //If we click on any character;
+
+            //overlayTile.GetComponent<SpriteRenderer>().color = Color.clear;
+            characterIsMoving = false;
+
+            character = characterHit.Value.transform.gameObject.GetComponent<Character>();
+
+            //If the tilePos isn't the character's position
+            if (!character.gridPos.Equals(tilePos))
+            {
+                generatePath(tilePos);
+                goto handle;
+            }
+
+            //If we click on an Enemy Character.
+            if(character.alignment == Character.AlignmentStatus.Enemy)
+            {
+                if (characterIsSelected && selectedCharacter.attackTiles.Contains(MapManager.instance.map[character.gridPos]))
+                {
+                    Debug.Log(selectedCharacter.characterName + " attacked " + character.characterName);
+                    selectedCharacter.weapons[0].Attack(selectedCharacter.characterStats, character);
+                    character = selectedCharacter;
+                    generatePath(arrowPath[Mathf.Max(arrowPath.Count - (character.weapons[0].attackRange + 1), 0)].gridPosition);
+                    GameManager.instance.updateCombatOrder();
+                    goto handle;
+                }
+            }
+
+            //We click on any Friendly Character.
+
+            if (characterIsSelected && character == selectedCharacter)
+            {
+                movementRangeTilemap.ClearAllTiles();
+                attackRangeTilemap.ClearAllTiles();
+                character = null;
+                characterIsSelected = false;
+                Debug.Log(character);
+                character.isSelected = false;
+            }
+
+            //We click on the selected character.
+            if (!characterIsSelected && character == selectedCharacter)
+            {
+                character.isSelected = true;
+                characterIsSelected = true;
+
+                selectedCharacter = character;
+
+                GameManager.instance.showGUI(selectedCharacter);
+
+                character.showMovementAndAttackRange(movementRangeTilemap, movementTile, attackRangeTilemap, attackTile, MapManager.instance);
+            }
+        }
+        //We click on a tile instead
+        else
+        {
+            //If we are trying to pick a tile
+            if (!characterIsSelected)
+            {
+                overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
+            }
+            else if (selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]) || selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
+            {
+                Debug.Log("TEST");
+                GameManager.instance.updateCombatOrder();
+            }
+
+            generatePath(tilePos);
+            arrowTilemap.ClearAllTiles();
+
+
+            
+        }
+
+        handle:
+        handlePath();
+
+
+
+        /**
         if (UserInput.instance.selectInput)
         {
             overlayTile.transform.position = tilePosWorld;
@@ -141,6 +252,7 @@ public class CursorMovement : MonoBehaviour
                     }
 
                     switch (character.alignment) {
+                        /**
                         case (Character.AlignmentStatus.Friendly):
                             character.isSelected = true;
                             characterIsSelected = true;
@@ -191,8 +303,27 @@ public class CursorMovement : MonoBehaviour
         {
 
         }
-
+        
         arrowPath.Clear();
+
+        //If the path is greater than 0, and is within the character's movement radius, move along the path.
+        if (path.Count > 0 && path.Sum(t => t.movementPenalty) <= character.movementRange)
+        {
+            moveAlongPath();
+            GameManager.instance.updateCombatOrder();
+        }
+        else if (character != null && character.isSelected)
+        {
+            path.Clear();
+        }
+        */
+    }
+
+
+    private void handlePath()
+    {
+        arrowPath.Clear();
+
 
         //If the path is greater than 0, and is within the character's movement radius, move along the path.
         if (path.Count > 0 && path.Sum(t => t.movementPenalty) <= character.movementRange)
@@ -217,7 +348,7 @@ public class CursorMovement : MonoBehaviour
             overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
 
             path.Clear();
-            path = pathFinder.findPath(mapManager.map[character.gridPos], mapManager.map[tilePos]);
+            path = pathFinder.findPath(MapManager.instance.map[character.gridPos], MapManager.instance.map[tilePos]);
             character.isSelected = false;
             characterIsSelected = false;
         }
@@ -230,20 +361,20 @@ public class CursorMovement : MonoBehaviour
         //path.Count <= character.movementRange
         if (path.Sum(t => t.movementPenalty) <= character.movementRange && path.Count > 0 && !characterIsMoving)
         {
-            foreach (CapturePoint c in mapManager.capturePoints)
+            foreach (CapturePoint c in MapManager.instance.capturePoints)
             {
                 if (c.capturePointTilemapPositions.Contains(character.gridPos))
                 {
-                    mapManager.updateOccupiedStatus(character.gridPos, "Objective");
+                    MapManager.instance.updateOccupiedStatus(character.gridPos, "Objective");
                     break;
                 }
                 else
                 {
-                    mapManager.updateOccupiedStatus(character.gridPos, "NotOccupied");
+                    MapManager.instance.updateOccupiedStatus(character.gridPos, "NotOccupied");
                 }
             }
 
-            mapManager.updateOccupiedStatus(tilePos, "Occupied");
+            MapManager.instance.updateOccupiedStatus(tilePos, "Occupied");
 
         }
     }
@@ -256,7 +387,7 @@ public class CursorMovement : MonoBehaviour
             overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
 
             arrowPath.Clear();
-            arrowPath = pathFinder.findArrowPath(mapManager.map[character.gridPos], mapManager.map[tilePos]);
+            arrowPath = pathFinder.findArrowPath(MapManager.instance.map[character.gridPos], MapManager.instance.map[tilePos]);
         }
 
         return arrowPath;

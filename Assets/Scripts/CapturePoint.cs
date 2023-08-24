@@ -5,8 +5,12 @@ using UnityEngine.Tilemaps;
 
 public class CapturePoint : MonoBehaviour
 {
+    public enum Status { Enemy, Friendly, Neutral}
+
+
     [Header("====== Capture Point Info ======")]
     [Range(1, 6)] [Tooltip("How big is the circular radius of the zone")] public int influenceRange = 3;
+    [Tooltip("Who currently is in control of the capture point")] public Status status;
 
     [Space(10)]
 
@@ -17,7 +21,7 @@ public class CapturePoint : MonoBehaviour
     private Tilemap t;
 
     public Tile capturePointTile;
-    public int calcRange;
+    private int calcRange;
 
     public List<Vector3Int> capturePointTilemapPositions;
 
@@ -35,41 +39,69 @@ public class CapturePoint : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        calcRange = Mathf.FloorToInt(Mathf.Floor(influenceRange / 2));
-
+        if(influenceRange % 2 != 0) calcRange = Mathf.FloorToInt(Mathf.Floor(influenceRange / 2));
         getTilePositionsInRange();
     }
 
     private void getTilePositionsInRange()
     {
+        //Could potentially move this system over to the obstacle system of having
+        //it be a list of conditions
+        
         if (influenceRange % 2 == 0)
         {
-            //even condition
+            /*
+             * Even Condition:
+             * Treats gridPos as the bottom right most position
+             */
+            for(int x = 0; x < influenceRange; x++)
+            {
+                for(int y = 0; y < influenceRange; y++)
+                {
+                    capturePointTilemapPositions.Add(new Vector3Int(gridPos.x + x, gridPos.y + y));
+                }
+            }
         }
         else
         {
-            //odd condition
+            /*
+             * Odd Condition:
+             * Treats gridPos as the center position
+             */
             for (int x = -calcRange; x <= calcRange; x++)
             {
                 for (int y = -calcRange; y <= calcRange; y++)
                 {
-                    Vector3Int gridLocation = new Vector3Int(gridPos.x + x, gridPos.y + y);
-                    capturePointTilemapPositions.Add(gridLocation);
+                    capturePointTilemapPositions.Add(new Vector3Int(gridPos.x + x, gridPos.y + y));
                 }
             }
         }
     }
 
-
     public void updateTilemap(Dictionary<Vector3Int, GridTile> map, Tilemap tilemap)
     {   
         if (influenceRange % 2 == 0)
         {
-            //even condition
+            /*
+             * Even Condition:
+             * Treats gridPos as the bottom right most position
+             */
+            for (int x = 0; x < influenceRange; x++)
+            {
+                for (int y = 0; y < influenceRange; y++)
+                {
+                    Vector3Int gridLocation = new Vector3Int(gridPos.x + x, gridPos.y + y);
+                    tilemap.SetTile(gridLocation, capturePointTile);
+                    map[gridLocation].status = "Objective";
+                }
+            }
         }
         else
         {
-            //odd condition
+            /*
+             * Odd Condition:
+             * Treats gridPos as the center position
+             */
             for (int x = -calcRange; x <= calcRange; x++)
             {
                 for (int y = -calcRange; y <= calcRange; y++)
