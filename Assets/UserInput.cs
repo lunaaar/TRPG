@@ -91,6 +91,8 @@ public class UserInput : MonoBehaviour
         }
     }
 
+    //======= Next Page Things =======
+
     IEnumerator nextPage()
     {
         pageSound.Play();
@@ -100,10 +102,20 @@ public class UserInput : MonoBehaviour
 
     public void nextPageAction(InputAction.CallbackContext context)
     {
+        Debug.Log("Next");
         if (!context.performed) return;
         StartCoroutine(nextPage());
         StopCoroutine(nextPage());
     }
+
+    public void nextPageButton()
+    {
+        StartCoroutine(nextPage());
+        StopCoroutine(nextPage());
+    }
+
+
+    //======= Previous Page Things =======
 
     IEnumerator previousPage()
     {
@@ -115,6 +127,12 @@ public class UserInput : MonoBehaviour
     public void previousPageAction(InputAction.CallbackContext context)
     {
         if (!context.performed) return;
+        StartCoroutine(previousPage());
+        StopCoroutine(previousPage());
+    }
+
+    public void previousPageButton()
+    {
         StartCoroutine(previousPage());
         StopCoroutine(previousPage());
     }

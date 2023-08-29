@@ -8,11 +8,17 @@ public class PauseMenu : MonoBehaviour
     public static PauseMenu instance;
     public static bool gameIsPaused = false;
 
+    [Space(5)]
+    [Header("Page Info")]
+
     public GameObject pauseMenu;
     public GameObject firstButton;
     public List<GameObject> pages;
     [SerializeField] private static int currentPage;
 
+    [Space(5)]
+    [Header("References")]
+    [SerializeField] private GameObject guiReference;
 
     private void Awake()
     {
@@ -33,12 +39,14 @@ public class PauseMenu : MonoBehaviour
         pages[currentPage].SetActive(false);
         Time.timeScale = 1f;
         gameIsPaused = false;
+        guiReference.SetActive(true);
         pauseMenu.SetActive(false);
     }
 
     public void Pause()
     {
         Debug.Log("Pause");
+        guiReference.SetActive(false);
         pauseMenu.SetActive(true);
         currentPage = 0;
         pages[currentPage].SetActive(true);
@@ -48,8 +56,6 @@ public class PauseMenu : MonoBehaviour
 
         gameIsPaused = true;
         Time.timeScale = 0f;
-
-        //StartCoroutine(CoverWaitFunction());
     }
 
     // Arrow Button Functions

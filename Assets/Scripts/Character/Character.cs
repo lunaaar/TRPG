@@ -9,6 +9,7 @@ public class Character : MonoBehaviour
 {
     [Header("====== Character Stats ======")]
     [Tooltip("Character Name")] public string characterName;
+    public Sprite characterImage;
     [Range(1, 6)] [Tooltip("How many tiles can this character move?")] public int movementRange = 3;
 
     public Stats characterStats;

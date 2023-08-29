@@ -63,7 +63,7 @@ public class PathFinder
 
             openList.Remove(currentTile);
 
-            if ((!currentTile.status.Equals("Occupied") && currentTile.F < 100))
+            if (!currentTile.status.Equals("Occupied") && !currentTile.status.Equals("Obstacle") && currentTile.F < 100)
             {
                 closedList.Add(currentTile);
             }
@@ -166,19 +166,19 @@ public class PathFinder
 
         //Right
         Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied") && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Left
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied") && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Up
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied") && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Down
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied")) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied") && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         return neighbours;
     }
@@ -191,19 +191,19 @@ public class PathFinder
 
         //Right
         Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Left
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Up
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Down
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1);
-        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         return neighbours;
     }

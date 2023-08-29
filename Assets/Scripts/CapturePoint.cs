@@ -46,7 +46,7 @@ public class CapturePoint : MonoBehaviour
     private void getTilePositionsInRange()
     {
         //Could potentially move this system over to the obstacle system of having
-        //it be a list of conditions
+        //it be a list of positions
         
         if (influenceRange % 2 == 0)
         {
@@ -78,7 +78,7 @@ public class CapturePoint : MonoBehaviour
         }
     }
 
-    public void updateTilemap(Dictionary<Vector3Int, GridTile> map, Tilemap tilemap)
+    public void updateTilemap(Dictionary<Vector3Int, GridTile> map, Tilemap tilemap, Tile tile)
     {   
         if (influenceRange % 2 == 0)
         {
@@ -91,7 +91,7 @@ public class CapturePoint : MonoBehaviour
                 for (int y = 0; y < influenceRange; y++)
                 {
                     Vector3Int gridLocation = new Vector3Int(gridPos.x + x, gridPos.y + y);
-                    tilemap.SetTile(gridLocation, capturePointTile);
+                    tilemap.SetTile(gridLocation, tile);
                     map[gridLocation].status = "Objective";
                 }
             }
@@ -107,7 +107,7 @@ public class CapturePoint : MonoBehaviour
                 for (int y = -calcRange; y <= calcRange; y++)
                 {
                     Vector3Int gridLocation = new Vector3Int(gridPos.x + x, gridPos.y + y);
-                    tilemap.SetTile(gridLocation, capturePointTile);
+                    tilemap.SetTile(gridLocation, tile);
                     map[gridLocation].status = "Objective";
                 }
             }

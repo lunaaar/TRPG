@@ -44,9 +44,10 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Tile occupiedTile;
     [SerializeField] private Tile obstacleTile;
     [SerializeField] private Tile objectiveTile;
+    [SerializeField] private Tile objectiveBaseTile;
 
-    public Vector3Int[] testTerrainTiles;
-    public Tile testTerrainTile;
+    public Vector3Int[] testDifficultTerrainList;
+    public Tile testDifficultTerrain;
 
     private void Awake()
     {
@@ -72,7 +73,7 @@ public class MapManager : MonoBehaviour
         //Sets up base map.
 
         BoundsInt bounds = tilemap.cellBounds;
-
+       
         for (int x = bounds.min.x; x < bounds.max.x; x++)
         {
             for (int y = bounds.min.y; y < bounds.max.y; y++)
@@ -88,11 +89,12 @@ public class MapManager : MonoBehaviour
             }
         }
         
+
         //Sets all the objectives on the tilemap
         foreach (CapturePoint cp in capturePoints)
         {
-            cp.updateTilemap(map, tilemap);
-            updateOccupiedStatus(cp.gridPos, "Terrain");
+            cp.updateTilemap(map, tilemap, objectiveTile);
+            updateOccupiedStatus(cp.gridPos, "ObjectiveBase");
         }
 
         //Sets all tiles characters are on to occupied.
@@ -104,17 +106,17 @@ public class MapManager : MonoBehaviour
         //Sets all tiles with any obstacles on to occupied.
         foreach (Obstacle obstacle in obstacles)
         {
-            updateOccupiedStatus(obstacle.gridPos, "Terrain");
+            updateOccupiedStatus(obstacle.gridPos, "Obstacle");
             foreach (Vector3Int pos in obstacle.usedSpaces)
             {
-                updateOccupiedStatus(pos + obstacle.gridPos, "Terrain");
+                updateOccupiedStatus(pos + obstacle.gridPos, "Obstacle");
             }
         }
 
         //TEST STUFF
-        foreach(Vector3Int v in testTerrainTiles)
+        foreach(Vector3Int v in testDifficultTerrainList)
         {
-            tilemap.SetTile(v, testTerrainTile);
+            tilemap.SetTile(v, testDifficultTerrain);
             map[v].movementPenalty = 2;
         }
     }
@@ -130,13 +132,18 @@ public class MapManager : MonoBehaviour
                 tilemap.SetTile(location, occupiedTile);
                 map[location].status = "Occupied";
                 break;
-            case "Terrain":
+            case "Obstacle":
                 tilemap.SetTile(location, obstacleTile);
-                map[location].status = "Occupied";
+                map[location].status = "Obstacle";
                 break;
             case "NotOccupied":
                 tilemap.SetTile(location, notOccupiedTile);
                 map[location].status = "NotOccupied";
+                break;
+            case "ObjectiveBase":
+                tilemap.SetTile(location, objectiveBaseTile);
+                //This might come back to bite me later.
+                map[location].status = "Obstacle";
                 break;
             default:
                 break;
