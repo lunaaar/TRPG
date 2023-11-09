@@ -21,7 +21,7 @@ public class UserInput : MonoBehaviour
 
     [SerializeField] private AudioSource bookOpen;
     [SerializeField] private AudioSource bookClose;
-    [SerializeField] private AudioSource pageSound;
+    [SerializeField] private AudioSource changePageSound;
 
     private void Awake()
     {
@@ -36,12 +36,15 @@ public class UserInput : MonoBehaviour
     private void setupInputActions()
     {
         selectAction = playerInput.actions["Select"];
+        selectAction.Enable();
 
         moveInput = new Vector2(590, 274);
     }
 
     private void Update()
     {
+        //Debug.Log(playerInput.currentActionMap);
+
         if (playerInput.currentActionMap.name == "Gameplay")
         {
             UpdateGameplayInputs();
@@ -75,19 +78,22 @@ public class UserInput : MonoBehaviour
 
     public void OpenUI(InputAction.CallbackContext context)
     {
-        if (!context.performed) return;
-        
-        if (PauseMenu.gameIsPaused)
+        if (context.performed)
         {
-            playerInput.SwitchCurrentActionMap("Gameplay");
-            bookClose.Play();
-            PauseMenu.instance.Resume();
-        }
-        else
-        {
-            playerInput.SwitchCurrentActionMap("MenuNav");
-            bookOpen.Play();
-            PauseMenu.instance.Pause();
+            Debug.Log("TEST2");
+
+            if (PauseMenu.gameIsPaused)
+            {
+                playerInput.SwitchCurrentActionMap("Gameplay");
+                bookClose.Play();
+                PauseMenu.instance.Resume();
+            }
+            else
+            {
+                playerInput.SwitchCurrentActionMap("MenuNav");
+                bookOpen.Play();
+                PauseMenu.instance.Pause();
+            }
         }
     }
 
@@ -95,7 +101,7 @@ public class UserInput : MonoBehaviour
 
     IEnumerator nextPage()
     {
-        pageSound.Play();
+        changePageSound.Play();
         PauseMenu.instance.nextPage();
         yield return null;
     }
@@ -103,9 +109,12 @@ public class UserInput : MonoBehaviour
     public void nextPageAction(InputAction.CallbackContext context)
     {
         Debug.Log("Next");
-        if (!context.performed) return;
-        StartCoroutine(nextPage());
-        StopCoroutine(nextPage());
+        if (context.performed)
+        {
+            StartCoroutine(nextPage());
+            StopCoroutine(nextPage());
+        }
+        
     }
 
     public void nextPageButton()
@@ -119,16 +128,18 @@ public class UserInput : MonoBehaviour
 
     IEnumerator previousPage()
     {
-        pageSound.Play();
+        changePageSound.Play();
         PauseMenu.instance.previousPage();
         yield return null;
     }
 
     public void previousPageAction(InputAction.CallbackContext context)
     {
-        if (!context.performed) return;
-        StartCoroutine(previousPage());
-        StopCoroutine(previousPage());
+        if (context.performed)
+        {
+            StartCoroutine(previousPage());
+            StopCoroutine(previousPage());
+        }
     }
 
     public void previousPageButton()

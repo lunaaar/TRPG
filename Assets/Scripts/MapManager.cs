@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System.Linq;
 
 public class MapManager : MonoBehaviour
 {
@@ -40,6 +38,10 @@ public class MapManager : MonoBehaviour
      * 
      */
     public Tilemap tilemap;
+
+    [Header("DEBUG COLORS")]
+    [SerializeField] private bool debugMode;
+
     [SerializeField] private Tile notOccupiedTile;
     [SerializeField] private Tile occupiedTile;
     [SerializeField] private Tile obstacleTile;
@@ -73,7 +75,7 @@ public class MapManager : MonoBehaviour
         //Sets up base map.
 
         BoundsInt bounds = tilemap.cellBounds;
-       
+
         for (int x = bounds.min.x; x < bounds.max.x; x++)
         {
             for (int y = bounds.min.y; y < bounds.max.y; y++)
@@ -84,36 +86,41 @@ public class MapManager : MonoBehaviour
                 {
                     GridTile gridTile = new GridTile(location);
                     map.Add(location, gridTile);
-                    updateOccupiedStatus(location, "NotOccupied");
+                    updateTileStatus(location, "NotOccupied");
                 }
             }
         }
         
-
+        
         //Sets all the objectives on the tilemap
         foreach (CapturePoint cp in capturePoints)
         {
             cp.updateTilemap(map, tilemap, objectiveTile);
-            updateOccupiedStatus(cp.gridPos, "ObjectiveBase");
+            updateTileStatus(cp.gridPos, "ObjectiveBase");
         }
 
         //Sets all tiles characters are on to occupied.
-        foreach (Character character in GameManager.instance.listOfAllCharacters)
+        foreach (Character friendly in GameManager.instance.listOfAllFriendly)
         {
-            updateOccupiedStatus(character.gridPos, "Occupied");
+            updateTileStatus(friendly.gridPosition, "Friendly");
+        }
+
+        foreach(Character enemy in GameManager.instance.listOfAllEnemies)
+        {
+            updateTileStatus(enemy.gridPosition, "Enemy");
         }
 
         //Sets all tiles with any obstacles on to occupied.
         foreach (Obstacle obstacle in obstacles)
         {
-            updateOccupiedStatus(obstacle.gridPos, "Obstacle");
+            updateTileStatus(obstacle.gridPos, "Obstacle");
             foreach (Vector3Int pos in obstacle.usedSpaces)
             {
-                updateOccupiedStatus(pos + obstacle.gridPos, "Obstacle");
+                updateTileStatus(pos + obstacle.gridPos, "Obstacle");
             }
         }
 
-        //TEST STUFF
+        //Difficult Terrain Test
         foreach(Vector3Int v in testDifficultTerrainList)
         {
             tilemap.SetTile(v, testDifficultTerrain);
@@ -121,27 +128,31 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    public void updateOccupiedStatus(Vector3Int location, string status)
+    public void updateTileStatus(Vector3Int location, string status)
     {
         switch (status) {  
             case "Objective":
-                tilemap.SetTile(location, objectiveTile);
+                if(debugMode) tilemap.SetTile(location, objectiveTile);
                 map[location].status = "Objective";
                 break;
-            case "Occupied":
-                tilemap.SetTile(location, occupiedTile);
-                map[location].status = "Occupied";
+            case "Friendly":
+                if (debugMode) tilemap.SetTile(location, occupiedTile);
+                map[location].status = "Friendly";
+                break;
+            case "Enemy":
+                if (debugMode) tilemap.SetTile(location, occupiedTile);
+                map[location].status = "Enemy";
                 break;
             case "Obstacle":
-                tilemap.SetTile(location, obstacleTile);
+                if (debugMode) tilemap.SetTile(location, obstacleTile);
                 map[location].status = "Obstacle";
                 break;
             case "NotOccupied":
-                tilemap.SetTile(location, notOccupiedTile);
+                if (debugMode) tilemap.SetTile(location, notOccupiedTile);
                 map[location].status = "NotOccupied";
                 break;
             case "ObjectiveBase":
-                tilemap.SetTile(location, objectiveBaseTile);
+                if (debugMode) tilemap.SetTile(location, objectiveBaseTile);
                 //This might come back to bite me later.
                 map[location].status = "Obstacle";
                 break;

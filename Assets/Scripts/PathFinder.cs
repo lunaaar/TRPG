@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-
-using UnityEngine.Tilemaps;
-
 public class PathFinder
 {
+    List<GridTile> openList = new List<GridTile>();
+    List<GridTile> closedList = new List<GridTile>();
+
     //A* algorithm for player movement.
     public List<GridTile> findPath(GridTile start, GridTile end)
     {
-        List<GridTile> openList = new List<GridTile>();
-        List<GridTile> closedList = new List<GridTile>();
+        openList.Clear();
+        closedList.Clear();
 
         openList.Add(start);
         while(openList.Count > 0)

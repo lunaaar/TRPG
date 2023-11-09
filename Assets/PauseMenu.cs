@@ -10,11 +10,14 @@ public class PauseMenu : MonoBehaviour
 
     [Space(5)]
     [Header("Page Info")]
-
     public GameObject pauseMenu;
     public GameObject firstButton;
     public List<GameObject> pages;
     [SerializeField] private static int currentPage;
+
+    [Space(5)]
+    [Header("Page Specific Stuff")]
+    public List<GameObject> charaterStatsDisplay;
 
     [Space(5)]
     [Header("References")]
@@ -36,6 +39,8 @@ public class PauseMenu : MonoBehaviour
     {
 
         Debug.Log("Resume");
+
+        Cursor.visible = false;
         pages[currentPage].SetActive(false);
         Time.timeScale = 1f;
         gameIsPaused = false;
@@ -46,6 +51,8 @@ public class PauseMenu : MonoBehaviour
     public void Pause()
     {
         Debug.Log("Pause");
+        
+        //Cursor.visible = true;
         guiReference.SetActive(false);
         pauseMenu.SetActive(true);
         currentPage = 0;

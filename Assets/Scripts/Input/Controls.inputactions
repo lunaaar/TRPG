@@ -173,6 +173,15 @@
             "id": "2c0f1a1d-b2a7-4b3e-ad08-fb8df0e86655",
             "actions": [
                 {
+                    "name": "MenuOpenClose",
+                    "type": "Button",
+                    "id": "1459e1a9-6207-48f8-8b26-d7fe435fb36d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Tap",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Page Right",
                     "type": "Button",
                     "id": "47228197-282e-4d27-8503-dbf832718d5b",
@@ -197,15 +206,6 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "MenuOpenClose",
-                    "type": "Button",
-                    "id": "1459e1a9-6207-48f8-8b26-d7fe435fb36d",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "Tap",
                     "initialStateCheck": false
                 }
             ],
