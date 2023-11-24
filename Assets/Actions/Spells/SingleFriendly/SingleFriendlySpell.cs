@@ -1,33 +1,45 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-//TODO: Remove this.
-[CreateAssetMenu(fileName = "new_melee_weapon", menuName = "Actions/Weapons/MeleeWeapon")]
-public class MeleeWeapon : Weapon
+[CreateAssetMenu(fileName = "new_single_friendly_spell", menuName = "Actions/Spell/SingleFriendySpell")]
+public class SingleFriendlySpell : Spell
 {
+    /**
+     * Single Friendly Spell:
+     * -------------------
+     * This will 
+     * 
+     */
+
     List<GridTile> attackTiles = new List<GridTile>();
     List<GridTile> surroundingTiles = new List<GridTile>();
 
-    public MeleeWeapon()
-    {
-        name = "New Melee Weapon";
-        range = 1;
-        damage = 1;
+    [Tooltip("How close can a target be for you to hit them with this weapon in tiles")]
+    public int closeRange;
 
-        actionTargets = ActionTargets.SingleEnemy;
+    public SingleFriendlySpell()
+    {
+        name = "New Single Friendly Spell";
+        range = 3;
+        closeRange = 2;
+        uses = 10;
+        actionTargets = ActionTargets.SingleAlly;
+        damageType = DamageType.Necrotic;
     }
 
     public override void performAction(Stats stats, Character target)
     {
-        base.performAction(stats, target);
+        var healAmount = stats.contains("Magic");
+
+        target.characterStats.SetStats("Health", Mathf.Max(target.characterStats.contains("MaxHealth"), healAmount));
     }
 
     public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
     {
         PathFinder pathFinder = new PathFinder();
 
-        //List<GridTile> attackTiles = new List<GridTile>();
         attackTiles.Clear();
 
         int step = 0;
@@ -36,7 +48,6 @@ public class MeleeWeapon : Weapon
 
         while (step < range)
         {
-            //var surroundingTiles = new List<GridTile>();
             surroundingTiles.Clear();
 
             foreach (var tile in attackTilesToCheck)
@@ -48,11 +59,7 @@ public class MeleeWeapon : Weapon
 
             foreach (var tile in surroundingTiles)
             {
-                if (tile.status.Equals("Friendly") && !tile.Equals(start))
-                {
-                    continue;
-                }
-                else if (tile.status.Equals("Enemy"))
+                if (tile.status.Equals("Friendly"))
                 {
                     attackTiles.Add(tile);
                 }
@@ -62,7 +69,8 @@ public class MeleeWeapon : Weapon
                 }
 
                 var path = pathFinder.findPath(start, tile);
-                if ((path.Sum(t => t.movementPenalty) <= range + movementRange && path.Sum(t => t.movementPenalty) > movementRange) || path.Count == range + movementRange)
+                if (path.Sum(t => t.movementPenalty) >= closeRange + movementRange
+                       && path.Sum(t => t.movementPenalty) <= range + movementRange)
                 {
                     attackTiles.Add(tile);
                 }
@@ -77,13 +85,13 @@ public class MeleeWeapon : Weapon
 
         foreach (var tile in attackTiles)
         {
-            if (tile.status.Equals("Enemy"))
+            if (tile.status.Equals("Friendly"))
             {
-                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
+                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.friendlyTileActive);
             }
             else if (pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
             {
-                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileEmpty);
+                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.friendlyTileEmpty);
             }
         }
 

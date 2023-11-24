@@ -26,7 +26,7 @@ public class SelfAbility : Ability
         attackTiles.Clear();
         attackTiles.Add(start);
 
-        CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTile);
+        CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
         return attackTiles;
     }
 

@@ -15,11 +15,13 @@ public class Weapon : Action
 
     public override void performAction(Stats stats, Character target)
     {
-        //Perform Action for a weapon is to do an Attack.
-        
-        //Current Health = Current Health - weaponDamage * Attack
-        target.characterStats.SetStats("currentHealth", target.characterStats.contains("currentHealth")
-                                       - damage * stats.contains("Attack"));
+        //? Perform Action for a weapon is to do an Attack.
+
+        //? Target.Health -= (Weapon.damage + Character.Attack) - Target.Defense;
+        var damageTaken = (stats.contains("Attack") + damage) - target.characterStats.contains("Defense");
+
+        target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
+
         target.updateHealthBar();
     }
 

@@ -10,13 +10,16 @@ public class Sword : MeleeWeapon
     {
         //TODO: Work out how specifically we want to calculate dmg and how Swords specifically should do it.
 
-        /*.
-            * Current Formula is just doing as much dmg as the actionCharacter has attack.
-            * Target.Health = Target.Health - ActionCharacter.Attack;
+        /*?
+            Current Formula:
+            ================
+            Target.Health -= (Weapon.damage + Character.Attack) - Target.Defense;
          */
-        
-        target.characterStats.SetStats("currentHealth", target.characterStats.contains("currentHealth")
-                                       - damage * stats.contains("Attack"));
+
+        var damageTaken = (stats.contains("Attack") + damage) - target.characterStats.contains("Defense");
+
+        //? Mathf.Max prevents the target from taking negative damage and actually healing.
+        target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
         target.updateHealthBar();
     }
 

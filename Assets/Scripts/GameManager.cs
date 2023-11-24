@@ -83,7 +83,7 @@ public class GameManager : MonoBehaviour
         {
             case (Character.AlignmentStatus.Friendly):
                 //If the player picked a character and moved them to a tile.
-                if (CursorMovement.instance.characterActionPerformed)
+                if (CursorMovement.instance.characterActionPerformed && CursorMovement.instance.characterMovementPerformed)
                 {
                     Debug.Log(CursorMovement.instance.selectedCharacter.name);
                     updateCombatOrder();
@@ -103,10 +103,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void showGUI(Character character)
+    public void showGUI(Character character, Vector3Int gP)
     {
-        Debug.Log("Show Gui");
-        character.showGUI();
+        character.showGUI(gP);
     }
 
     private void getCombatOrder()

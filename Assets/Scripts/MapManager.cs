@@ -15,8 +15,8 @@ public class MapManager : MonoBehaviour
 
     //public PathFinder pathFinder;
 
-    /*
-     * Test Coloring, should make this option permanent but only in a "debug mode"
+    /*?
+     * Test Coloring: (only active when debugMode is flipped to true).
      * - The following will be the rubric for what the colors associatedly mean.
      * 
      * Rubric:

@@ -1,31 +1,33 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class SingleFriendlySpell : Spell
+//TODO: Remove this.
+[CreateAssetMenu(fileName = "new_melee_weapon", menuName = "Actions/Weapons/MeleeWeapon")]
+public class MeleeWeapon : Weapon
 {
-    /**
-     * Single Friendly Spell:
-     * -------------------
-     * This will 
-     * 
+    /*.
+        Melee Weapon:
+        -------------
+        Melee weapons function as one of the two core weapon types.
+        They are extremely straight forward. They have an amount of damage, and can hit range tiles away.
+        
+        Examples of why range could be different count include:
+        - Sword = 1 range
+        - Spear = 2 range
      */
-
+    
+    
     List<GridTile> attackTiles = new List<GridTile>();
     List<GridTile> surroundingTiles = new List<GridTile>();
 
-    [Tooltip("How close can a target be for you to hit them with this weapon in tiles")]
-    public int closeRange;
-
-    public SingleFriendlySpell()
+    public MeleeWeapon()
     {
-        name = "New Single Friendly Spell";
-        range = 3;
-        closeRange = 2;
-        uses = 10;
-        actionTargets = ActionTargets.SingleAlly;
-        damageType = DamageType.Necrotic;
+        name = "New Melee Weapon";
+        range = 1;
+        damage = 1;
+
+        actionTargets = ActionTargets.SingleEnemy;
     }
 
     public override void performAction(Stats stats, Character target)
@@ -37,6 +39,7 @@ public class SingleFriendlySpell : Spell
     {
         PathFinder pathFinder = new PathFinder();
 
+        //List<GridTile> attackTiles = new List<GridTile>();
         attackTiles.Clear();
 
         int step = 0;
@@ -45,6 +48,7 @@ public class SingleFriendlySpell : Spell
 
         while (step < range)
         {
+            //var surroundingTiles = new List<GridTile>();
             surroundingTiles.Clear();
 
             foreach (var tile in attackTilesToCheck)
@@ -56,7 +60,11 @@ public class SingleFriendlySpell : Spell
 
             foreach (var tile in surroundingTiles)
             {
-                if (tile.status.Equals("Friendly"))
+                if (tile.status.Equals("Friendly") && !tile.Equals(start))
+                {
+                    continue;
+                }
+                else if (tile.status.Equals("Enemy"))
                 {
                     attackTiles.Add(tile);
                 }
@@ -66,8 +74,7 @@ public class SingleFriendlySpell : Spell
                 }
 
                 var path = pathFinder.findPath(start, tile);
-                if (path.Sum(t => t.movementPenalty) >= closeRange + movementRange
-                       && path.Sum(t => t.movementPenalty) <= range + movementRange)
+                if ((path.Sum(t => t.movementPenalty) <= range + movementRange && path.Sum(t => t.movementPenalty) > movementRange) || path.Count == range + movementRange)
                 {
                     attackTiles.Add(tile);
                 }
@@ -82,9 +89,13 @@ public class SingleFriendlySpell : Spell
 
         foreach (var tile in attackTiles)
         {
-            if (tile.status.Equals("Friendly"))
+            if (tile.status.Equals("Enemy"))
             {
-                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.friendlyTile);
+                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
+            }
+            else if (pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
+            {
+                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileEmpty);
             }
         }
 

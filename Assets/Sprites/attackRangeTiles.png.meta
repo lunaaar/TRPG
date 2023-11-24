@@ -199,6 +199,48 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: attackRangeTiles_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ecf5110bc4aab641b1d8582576cf2be
+      internalID: 2012270187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: attackRangeTiles_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa23b26efdc863f4a9057c9fa54bd253
+      internalID: -276757948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -213,6 +255,8 @@ TextureImporter:
       attackRangeTiles_3: 242585861
       attackRangeTiles_0: -102392561
       attackRangeTiles_2: -861854797
+      attackRangeTiles_5: -276757948
+      attackRangeTiles_4: 2012270187
       attackRangeTiles_1: 1385135864
   spritePackingTag: 
   pSDRemoveMatte: 0

@@ -31,6 +31,7 @@ public class Action : ScriptableObject
         The current heirarchy is:
         - Weapons
             - Melee Weapon
+                -Sword
             - Ranged Weapon
         - Spell
             - Self Spell
@@ -52,9 +53,9 @@ public class Action : ScriptableObject
 
      */
 
-    public new string name;
-    public int range;
-    public int damage;
+    [Tooltip("What is the name of the Action?")] public new string name;
+    [Tooltip("This represents what the range of the Action is")] public int range;
+    [Tooltip("This represents how much base damage the Action does")] public int damage;
     public ActionType actionType;
     public ActionTargets actionTargets;
 

@@ -72,22 +72,18 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            var bounds = CursorMovement.instance.movementRangeTilemap.cellBounds;
-            Debug.Log(CursorMovement.instance.movementRangeTilemap.GetTilesRangeCount(bounds.max, bounds.min));
-        }
+
     }
 
-    public void showGUI()
+    public void showGUI(Vector3Int gP)
     {
         foreach (Transform child in transformReference)
         {
             Destroy(child.gameObject);
         }
 
-        //I think for now, lets try and get some simple system in place so we can at least test
-        //The rest of the code around how itll end up working.
+        //? I think for now, lets try and get some simple system in place so we can at least test
+        //? The rest of the code around how itll end up working.
 
         Vector3 buttonPosition = new Vector3(-15, 0, 0);
 
@@ -101,7 +97,7 @@ public class Character : MonoBehaviour
 
             b.GetComponent<Image>().color = Color.red;
             b.GetComponentInChildren<TextMeshProUGUI>().text = w.name;
-            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(w));
+            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(w, gP));
         }
         //Sets up all the Spell Buttons.
         foreach (Spell s in listOfSpells)
@@ -113,7 +109,7 @@ public class Character : MonoBehaviour
 
             b.GetComponent<Image>().color = Color.blue;
             b.GetComponentInChildren<TextMeshProUGUI>().text = s.name;
-            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(s));
+            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(s, gP));
         }
 
         //Sets up all the Ability Buttons.
@@ -126,11 +122,11 @@ public class Character : MonoBehaviour
 
             b.GetComponent<Image>().color = Color.green;
             b.GetComponentInChildren<TextMeshProUGUI>().text = a.name;
-            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(a));
+            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(a, gP));
         }
     }
 
-    public void setSelectedAction(ScriptableObject scriptableObject)
+    public void setSelectedAction(ScriptableObject scriptableObject, Vector3Int gP)
     {
         CursorMovement.instance.attackRangeTilemap.ClearAllTiles();
 
@@ -142,7 +138,10 @@ public class Character : MonoBehaviour
         if (selectedAction.GetType().BaseType.BaseType.ToString() == "Action")
         {
             var action = (Action)selectedAction;
-            attackTiles = action.showActionRange(movementTiles, MapManager.instance.map[gridPosition], movementRange);
+
+            int moveRange = movementRange;
+            if (CursorMovement.instance.characterMovementPerformed) moveRange = 0;
+            attackTiles = action.showActionRange(movementTiles, MapManager.instance.map[gridPosition], moveRange);
         }
     }
 
@@ -208,10 +207,15 @@ public class Character : MonoBehaviour
 
         List<GridTile> tilesToCheck = new List<GridTile>();
         tilesToCheck.Add(start);
+        movementTiles.Add(start);
 
         var surroundingTiles = new List<GridTile>();
 
-        while (step < movementRange)
+        int range = 0;
+
+        if (!CursorMovement.instance.characterMovementPerformed) range = movementRange;
+
+        while (step < range)
         {
             surroundingTiles.Clear();
 
@@ -222,7 +226,7 @@ public class Character : MonoBehaviour
 
             foreach (var tile in surroundingTiles)
             {
-                if (!tile.status.Equals("Occupied") && pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) <= movementRange)
+                if (tile.status.Equals("NotOccupied") && pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) <= movementRange)
                 {
                     movementTiles.Add(tile);
                     tilesToCheck.Add(tile);
@@ -233,11 +237,16 @@ public class Character : MonoBehaviour
 
         movementTiles = new List<GridTile>(movementTiles.Distinct());
 
+        if (CursorMovement.instance.characterMovementPerformed)
+        {
+            CursorMovement.instance.movementRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.movementTile);
+            
+            return;
+        }
+
         foreach (var tile in movementTiles)
         {
-
             CursorMovement.instance.movementRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.movementTile);
-            //movementTilemap.SetTile(tile.gridPosition, CursorMovement.instance.movementTile);
         }
     }
 }
