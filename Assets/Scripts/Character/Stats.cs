@@ -32,6 +32,15 @@ public class Stats : MonoBehaviour
     }
 
     public List<Stat> stats;
+    public List<Stat> baseStats;
+
+    public void Start()
+    {
+        foreach(Stat s in stats.GetRange(2, stats.Count - 2))
+        {
+            baseStats.Add(new Stat(s.key, s.value));
+        }
+    }
 
     public void SetStats(string key, float value)
     {
@@ -40,7 +49,7 @@ public class Stats : MonoBehaviour
             if (s.key.Equals(key))
             {
                 s.value = value;
-                break;
+                return;
             }
         }
 
@@ -50,6 +59,20 @@ public class Stats : MonoBehaviour
     public float contains(string key)
     {
         foreach(Stat s in stats)
+        {
+            if (s.key.Equals(key))
+            {
+                return s.value;
+            }
+        }
+
+        //. Return something that should never be returned.
+        return -1;
+    }
+
+    public float baseStatContains(string key)
+    {
+        foreach (Stat s in baseStats)
         {
             if (s.key.Equals(key))
             {

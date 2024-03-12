@@ -30,7 +30,8 @@ public class PathFinder
 
             foreach (var tile in getNeighbourTiles(currentTile))
             {
-                if (closedList.Contains(tile))
+                //This will likely need to be updated to allow moving onto objective.
+                if (closedList.Contains(tile) || !tile.status.Equals("NotOccupied"))
                 {
                     continue;
                 }
@@ -53,8 +54,8 @@ public class PathFinder
 
     public List<GridTile> findArrowPath(GridTile start, GridTile end)
     {
-        List<GridTile> openList = new List<GridTile>();
-        List<GridTile> closedList = new List<GridTile>();
+        openList.Clear();
+        closedList.Clear();
 
         openList.Add(start);
         while (openList.Count > 0)
@@ -62,13 +63,9 @@ public class PathFinder
             GridTile currentTile = openList.OrderBy(x => x.F).First();
 
             openList.Remove(currentTile);
+            closedList.Add(currentTile);
 
-            if (!currentTile.status.Equals("Occupied") && !currentTile.status.Equals("Obstacle") && currentTile.F < 100)
-            {
-                closedList.Add(currentTile);
-            }
-
-            if (currentTile.Equals(end))
+            if (currentTile == end)
             {
                 //finalize path
                 return getFinishedList(start, end);
@@ -76,11 +73,18 @@ public class PathFinder
 
             foreach (var tile in getNeighbourAttackTiles(currentTile))
             {
-                if (closedList.Contains(tile))
+                if (tile.Equals(end) && tile.status.Equals("Enemy"))
+                {
+                    tile.previous = currentTile;
+                    openList.Add(tile);
+                }
+
+                //TODO: so this shows up.
+                //? Should be fixed now.
+                if (closedList.Contains(tile) || (!tile.status.Equals("NotOccupied") && !tile.status.Equals("Objective")))
                 {
                     continue;
                 }
-
                 tile.G = GetManhattenDistance(start, tile);
                 tile.H = GetManhattenDistance(end, tile);
 
@@ -97,31 +101,47 @@ public class PathFinder
         return new List<GridTile>();
     }
 
-    //Returns a list of all GridTiles within a certain tile range (int range) from the center GridTile start
-    public List<GridTile> getTilesInRange(GridTile start, int range, Character character)
+    public List<GridTile> findTruePath(GridTile start, GridTile end)
     {
-        List<GridTile> inRangeTiles = new List<GridTile>();
-        inRangeTiles.Add(start);
-        int step = 0;
+        //? This is the True Path calculator, it basically just finds either a straight line, or the quickest path to a point.
+        
+        openList.Clear();
+        closedList.Clear();
 
-        List<GridTile> previousStep = new List<GridTile>();
-        previousStep.Add(start);
-
-        while (step < range)
+        openList.Add(start);
+        while (openList.Count > 0)
         {
-            var surroundingTiles = new List<GridTile>();
+            GridTile currentTile = openList.OrderBy(x => x.F).First();
 
-            foreach(var tile in previousStep)
+            openList.Remove(currentTile);
+            closedList.Add(currentTile);
+
+            if (currentTile == end)
             {
-                surroundingTiles.AddRange(getNeighbourAttackTiles(tile));
+                //finalize path
+                return getFinishedList(start, end);
             }
 
-            inRangeTiles.AddRange(surroundingTiles);
-            previousStep = surroundingTiles.Distinct().ToList();
-            step++;
+            foreach (var tile in getNeighbourTrueTiles(currentTile))
+            {
+                if (closedList.Contains(tile) )
+                {
+                    continue;
+                }
+                tile.G = GetManhattenDistance(start, tile);
+                tile.H = GetManhattenDistance(end, tile);
+
+                tile.previous = currentTile;
+
+
+                if (!openList.Contains(tile))
+                {
+                    openList.Add(tile);
+                }
+            }
         }
 
-        return inRangeTiles.Distinct().ToList();
+        return new List<GridTile>();
     }
 
     private List<GridTile> getFinishedList(GridTile start, GridTile end)
@@ -129,7 +149,7 @@ public class PathFinder
         List<GridTile> finishedList = new List<GridTile>();
         GridTile currentTile = end;
 
-        while (currentTile != start)
+        /**while (currentTile != start)
         {
             if (!finishedList.Contains(currentTile))
             {
@@ -144,6 +164,16 @@ public class PathFinder
             {
                 break;
             }
+        }*/
+
+        while (currentTile != start)
+        {
+            finishedList.Add(currentTile);
+            if(currentTile.Equals(start))
+            {
+                break;
+            }
+            currentTile = currentTile.previous;
         }
 
         finishedList.Reverse();
@@ -156,7 +186,157 @@ public class PathFinder
         return Mathf.Abs(start.gridPosition.x - tile.gridPosition.x) + Mathf.Abs(start.gridPosition.y - tile.gridPosition.y);
     }
 
+    //. Returns a list of all GridTiles within a certain tile range (int range) from the center GridTile start
+    public List<GridTile> getTilesInRange(GridTile start, int range)
+    {
+        List<GridTile> inRangeTiles = new List<GridTile>();
+        inRangeTiles.Add(start);
+        int step = 0;
+
+        List<GridTile> previousStep = new List<GridTile>();
+        previousStep.Add(start);
+
+        while (step < range)
+        {
+            var surroundingTiles = new List<GridTile>();
+
+            foreach (var tile in previousStep)
+            {
+                surroundingTiles.AddRange(getNeighbourAttackTiles(tile));
+            }
+
+            inRangeTiles.AddRange(surroundingTiles);
+            previousStep = surroundingTiles.Distinct().ToList();
+            step++;
+        }
+
+        return inRangeTiles.Distinct().ToList();
+    }
+
+    public Vector3Int getAbove(Vector3Int v)
+    {
+        return new Vector3Int(v.x, v.y, v.z + 1);
+    }
+
     public List<GridTile> getNeighbourTiles(GridTile currentGridTile)
+    {  
+
+        var map = MapManager.instance.map;
+
+        List<GridTile> neighbours = new List<GridTile>();
+
+        Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) &&
+            !map.ContainsKey(getAbove(locationToCheck)) &&
+            !map[locationToCheck].status.Equals("Occupied") &&
+            !map[locationToCheck].status.Equals("Obstacle"))
+        {
+            neighbours.Add(map[locationToCheck]);
+        }
+
+        return neighbours;
+    }
+
+    /**public List<GridTile> getNeighbourTiles(GridTile currentGridTile)
     {
         var map = MapManager.instance.map;
 
@@ -181,9 +361,54 @@ public class PathFinder
         if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Occupied") && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         return neighbours;
-    }
+    }*/
 
     public List<GridTile> getNeighbourAttackTiles(GridTile currentGridTile)
+    {
+        var map = MapManager.instance.map;
+
+        List<GridTile> neighbours = new List<GridTile>();
+
+        Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+        
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+
+        return neighbours;
+    }
+
+    /**public List<GridTile> getNeighbourAttackTiles(GridTile currentGridTile)
     {
         var map = MapManager.instance.map;
 
@@ -195,7 +420,7 @@ public class PathFinder
 
         //Left
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
-        if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
+        if (map.ContainsKey(locationToCheck) && !map.ContainsKey(getAbove(locationToCheck)) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         //Up
         locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
@@ -206,5 +431,134 @@ public class PathFinder
         if (map.ContainsKey(locationToCheck) && !map[locationToCheck].status.Equals("Obstacle")) neighbours.Add(map[locationToCheck]);
 
         return neighbours;
+    }*/
+
+    public List<GridTile> getNeighbourTrueTiles(GridTile currentGridTile)
+    {
+        var map = MapManager.instance.map;
+
+        List<GridTile> neighbours = new List<GridTile>();
+
+        Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z + 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1, currentGridTile.gridPosition.z - 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        return neighbours;
+
+        /**var map = MapManager.instance.map;
+
+        List<GridTile> neighbours = new List<GridTile>();
+
+        //Right
+        Vector3Int locationToCheck = new Vector3Int(currentGridTile.gridPosition.x + 1, currentGridTile.gridPosition.y);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        //Left
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x - 1, currentGridTile.gridPosition.y);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        //Up
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y + 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        //Down
+        locationToCheck = new Vector3Int(currentGridTile.gridPosition.x, currentGridTile.gridPosition.y - 1);
+        if (map.ContainsKey(locationToCheck)) neighbours.Add(map[locationToCheck]);
+
+        return neighbours;*/
+    }
+
+
+    public List<GridTile> getCube(GridTile start, int range)
+    {
+        List<GridTile> inRangeTiles = new List<GridTile>();
+
+        if (range % 2 == 0)
+        {
+            /*
+             * Even Condition:
+             * Treats gridPos as the bottom right most position
+             */
+            for (int x = 0; x < range; x++)
+            {
+                for (int y = 0; y < range; y++)
+                {
+                    //capturePointTilemapPositions.Add(new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y));
+
+                    for (int z = 1; z > -1; z--)
+                    {
+                        var location = new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y, start.gridPosition.z + z);
+
+                        if (MapManager.instance.map.ContainsKey(location))
+                        {
+                            inRangeTiles.Add(MapManager.instance.map[location]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            /*
+             * Odd Condition:
+             * Treats gridPos as the center position
+             */
+
+            var calcRange = Mathf.FloorToInt(Mathf.Floor(range / 2));
+
+            for (int x = -calcRange; x <= calcRange; x++)
+            {
+                for (int y = -calcRange; y <= calcRange; y++)
+                {
+                    //capturePointTilemapPositions.Add(new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y));
+
+                    for (int z = 1; z > -1; z--)
+                    {
+                        var location = new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y, start.gridPosition.z);
+
+                        if (MapManager.instance.map.ContainsKey(location))
+                        {
+                            inRangeTiles.Add(MapManager.instance.map[location]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return inRangeTiles.Distinct().ToList();
     }
 }

@@ -44,3 +44,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Background
+    uniqueID: 3718543083
+    locked: 0
+  - name: Floor
+    uniqueID: 2432593185
+    locked: 0
+  - name: Transparent Tiles
+    uniqueID: 3030158739
+    locked: 0
+  - name: UI
+    uniqueID: 3179238603
+    locked: 0

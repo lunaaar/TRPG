@@ -10,8 +10,7 @@ public class MapManager : MonoBehaviour
 
     private Obstacle[] obstacles;
 
-    public GameObject[] objectives;
-    public CapturePoint[] capturePoints;
+    //public CapturePoint[] capturePoints;
 
     //public PathFinder pathFinder;
 
@@ -37,7 +36,13 @@ public class MapManager : MonoBehaviour
      * - Purple
      * 
      */
-    public Tilemap tilemap;
+
+    [Header("Test Tilemap Idea")]
+    public Tilemap[] floorTilemaps;
+    public Tilemap[] movementTilemaps;
+    public Tilemap[] attackTilemaps;
+
+
 
     [Header("DEBUG COLORS")]
     [SerializeField] private bool debugMode;
@@ -47,6 +52,7 @@ public class MapManager : MonoBehaviour
     [SerializeField] private Tile obstacleTile;
     [SerializeField] private Tile objectiveTile;
     [SerializeField] private Tile objectiveBaseTile;
+    [SerializeField] private Tile waterTile;
 
     public Vector3Int[] testDifficultTerrainList;
     public Tile testDifficultTerrain;
@@ -56,55 +62,205 @@ public class MapManager : MonoBehaviour
         DontDestroyOnLoad(this);
 
         if (instance == null) instance = this;
+
+        obstacles = (Obstacle[])FindObjectsOfType(typeof(Obstacle));
+
+        map = new Dictionary<Vector3Int, GridTile>();
+
+        
     }
 
     // Start is called before the first frame update
     void Start()
     {
         //pathFinder = new PathFinder();
-        capturePoints = (CapturePoint[])FindObjectsOfType(typeof(CapturePoint));
-        obstacles = (Obstacle[])FindObjectsOfType(typeof(Obstacle));
+        //capturePoints = (CapturePoint[])FindObjectsOfType(typeof(CapturePoint));
+        //setUpMap();
 
-        map = new Dictionary<Vector3Int, GridTile>();
+        /**foreach(Tilemap t in floorTilemaps)
+        {
+            setUpMap(t);
+        }*/
 
-        setUpMap();
+        floorTilemaps = GameObject.Find("Floor Parent").GetComponentsInChildren<Tilemap>();
+
+        setUpMaps();
+    }
+
+    public void setUpMaps()
+    {
+        Vector3Int location;
+
+        Tilemap tilemap;
+
+
+        //. Process Entire Map first.
+        for (int i = 0; i < floorTilemaps.Length; i++)
+        {   
+            BoundsInt bounds = floorTilemaps[i].cellBounds;
+
+            for(int x = bounds.xMin; x < bounds.xMax; x++)
+            {
+                for(int y = bounds.yMin; y < bounds.yMax; y++)
+                {
+                    location = new Vector3Int(x, y, i);
+
+                    if(i == 0 && floorTilemaps[i].HasTile(location))
+                    {
+                        GridTile gridTile = new GridTile(location);
+                        map.Add(location, gridTile);
+                        updateTileStatus(location, "Water", floorTilemaps[i]);
+                    }
+                    else if (floorTilemaps[i].HasTile(location))
+                    {
+                        GridTile gridTile = new GridTile(location);
+                        map.Add(location, gridTile);
+                        //floorTilemaps[i].SetTileFlags(location, TileFlags.None);
+                        updateTileStatus(location, "NotOccupied", floorTilemaps[i]);
+                    }
+                }
+            }
+        }
+
+        //Sets all the objectives on the tilemap
+
+        switch (GameManager.instance.currentLevel.levelType) 
+        {
+            case (Level.LevelType.CapturePoint):
+                var levelCP = (Level_Capture_Point)GameManager.instance.currentLevel;
+
+                levelCP.getAllCapturePoints();
+
+                foreach (CapturePoint capturePoint in levelCP.capturePoints)
+                {
+                    capturePoint.updateGridPos();
+
+                    //floorTilemaps[capturePoint.gridPosition.z].SetTileFlags(capturePoint.gridPosition, TileFlags.None);
+                    floorTilemaps[capturePoint.gridPosition.z].SetColor(capturePoint.gridPosition, GameManager.instance.testColor);
+
+                    //capturePoint.getTilePositionsInRange();
+
+                    capturePoint.updateTilemap();
+
+                    tilemap = floorTilemaps[capturePoint.GetComponent<SpriteRenderer>().sortingOrder - 1];
+                    updateTileStatus(capturePoint.gridPosition, "ObjectiveBase", tilemap);
+
+                    capturePoint.calculateStatus();
+                }
+                break;
+            case (Level.LevelType.Payload):
+                var levelPay = (Level_Payload)GameManager.instance.currentLevel;
+
+                levelPay.getAllPayloads();
+
+                levelPay.payload.updateGridPos();
+
+                levelPay.payload.updateTilemap();
+
+                levelPay.payload.setUpPath();
+
+                tilemap = floorTilemaps[levelPay.payload.GetComponent<SpriteRenderer>().sortingOrder - 1];
+                updateTileStatus(levelPay.payload.gridPosition, "ObjectiveBase", tilemap);
+
+                levelPay.payload.calculateStatus();
+
+                break;
+            case (Level.LevelType.KillAll):
+                break;
+            case (Level.LevelType.Protect):
+                break;
+            default:
+                break;
+        }
+
+        //. Process every character.
+        /**foreach (Character friendly in GameManager.instance.listOfAllFriendly)
+        {
+            friendly.updateGridPos();
+            tilemap = floorTilemaps[friendly.GetComponent<SpriteRenderer>().sortingOrder - 1];
+            updateTileStatus(friendly.gridPosition, "Friendly", tilemap);
+        }*/
+
+        /**foreach (Character enemy in GameManager.instance.listOfAllEnemies)
+{
+            enemy.updateGridPos();
+            tilemap = floorTilemaps[enemy.GetComponent<SpriteRenderer>().sortingOrder - 1];
+            updateTileStatus(enemy.gridPosition, "Enemy");
+        }*/
+
+        foreach (Character character in GameManager.instance.listOfAllCharacters)
+        {
+            character.updateGridPos();
+            tilemap = floorTilemaps[character.GetComponent<SpriteRenderer>().sortingOrder - 1];
+            updateTileStatus(character.gridPosition, character.alignment.ToString(), tilemap);
+        }
+
+        //. Sets all tiles with any obstacles on to occupied.
+        foreach (Obstacle obstacle in obstacles)
+        {
+            updateTileStatus(obstacle.gridPos, "Obstacle");
+            foreach (Vector3Int pos in obstacle.usedSpaces)
+            {
+                updateTileStatus(pos + obstacle.gridPos, "Obstacle");
+            }
+        }
     }
 
     public void setUpMap()
     {
+        /**
         //Sets up base map.
-
         BoundsInt bounds = tilemap.cellBounds;
-
         for (int x = bounds.min.x; x < bounds.max.x; x++)
         {
             for (int y = bounds.min.y; y < bounds.max.y; y++)
             {
-                var location = new Vector3Int(x, y, 0);
-
-                if (tilemap.HasTile(location))
+                for(int z = 0; z < bounds.max.z; z++)
                 {
-                    GridTile gridTile = new GridTile(location);
-                    map.Add(location, gridTile);
-                    updateTileStatus(location, "NotOccupied");
+                    var location = new Vector3Int(x, y, z);
+
+                    if(z == 0 && tilemap.HasTile(location))
+                    {
+                        GridTile gridTile = new GridTile(location);
+                        map.Add(location, gridTile);
+                        updateTileStatus(location, "Water");
+                    }
+                    else if (tilemap.HasTile(location))
+                    {
+                        GridTile gridTile = new GridTile(location);
+                        map.Add(location, gridTile);
+                        tilemap.SetTileFlags(location, TileFlags.None);
+                        updateTileStatus(location, "NotOccupied");
+                    }
                 }
             }
         }
-        
-        
+
+        /**
         //Sets all the objectives on the tilemap
-        foreach (CapturePoint cp in capturePoints)
+        if(GameManager.instance.currentLevel.levelType == Level.LevelType.CapturePoint)
         {
-            cp.updateTilemap(map, tilemap, objectiveTile);
-            updateTileStatus(cp.gridPos, "ObjectiveBase");
+            var level = (Level_Capture_Point)GameManager.instance.currentLevel;
+
+            level.getAllCapturePoints();
+
+            foreach (CapturePoint cp in level.capturePoints)
+            {
+                cp.updateTilemap(map, tilemap, objectiveTile);
+                updateTileStatus(cp.gridPos, "ObjectiveBase");
+                cp.calculateStatus();
+            }
         }
 
+
+        
         //Sets all tiles characters are on to occupied.
         foreach (Character friendly in GameManager.instance.listOfAllFriendly)
         {
+            //Debug.Log(friendly.gridPosition);
             updateTileStatus(friendly.gridPosition, "Friendly");
         }
-
+        /**
         foreach(Character enemy in GameManager.instance.listOfAllEnemies)
         {
             updateTileStatus(enemy.gridPosition, "Enemy");
@@ -125,15 +281,20 @@ public class MapManager : MonoBehaviour
         {
             tilemap.SetTile(v, testDifficultTerrain);
             map[v].movementPenalty = 2;
-        }
+        }*/
     }
 
     public void updateTileStatus(Vector3Int location, string status)
     {
-        switch (status) {  
-            case "Objective":
-                if(debugMode) tilemap.SetTile(location, objectiveTile);
-                map[location].status = "Objective";
+        Debug.Log("UpdateTileStatus Filler");
+    }
+
+    public void updateTileStatus(Vector3Int location, string status, Tilemap tilemap)
+    {
+        switch (status) {
+            case "NotOccupied":
+                if (debugMode) tilemap.SetTile(location, notOccupiedTile);
+                map[location].status = "NotOccupied";
                 break;
             case "Friendly":
                 if (debugMode) tilemap.SetTile(location, occupiedTile);
@@ -143,23 +304,61 @@ public class MapManager : MonoBehaviour
                 if (debugMode) tilemap.SetTile(location, occupiedTile);
                 map[location].status = "Enemy";
                 break;
+            case "Objective":
+                if(debugMode) tilemap.SetTile(location, objectiveTile);
+                map[location].status = "Objective";
+                break;
             case "Obstacle":
                 if (debugMode) tilemap.SetTile(location, obstacleTile);
                 map[location].status = "Obstacle";
                 break;
-            case "NotOccupied":
-                if (debugMode) tilemap.SetTile(location, notOccupiedTile);
-                map[location].status = "NotOccupied";
-                break;
             case "ObjectiveBase":
                 if (debugMode) tilemap.SetTile(location, objectiveBaseTile);
-                //This might come back to bite me later.
+                //? This might come back to bite me later.
                 map[location].status = "Obstacle";
+                break;
+            case "Water":
+                if (debugMode) tilemap.SetTile(location, waterTile);
+                map[location].status = "Water";
                 break;
             default:
                 break;
         }
 
         map[location].movementPenalty = 1;
+    }
+
+    public void resetMap()
+    {
+        foreach(KeyValuePair<Vector3Int, GridTile> entry in map)
+        {
+            floorTilemaps[entry.Value.gridPosition.z].SetColor(entry.Value.gridPosition, Color.white);
+        }
+    }
+
+    public void resetMovementTiles()
+    {
+        if(CursorMovement.instance.selectedCharacter == null || CursorMovement.instance.selectedCharacter.movementTiles == null)
+        {
+            return;
+        }
+        
+        foreach(GridTile t in CursorMovement.instance.selectedCharacter.movementTiles)
+        {
+            floorTilemaps[t.gridPosition.z].SetColor(t.gridPosition, Color.white);
+        }
+    }
+
+    public void resetAttackTiles()
+    {
+        if(CursorMovement.instance.selectedCharacter.selectedAction == null || CursorMovement.instance.selectedCharacter.attackTiles == null)
+        {
+            return;
+        }
+
+        foreach (GridTile t in CursorMovement.instance.selectedCharacter.attackTiles)
+        {
+            floorTilemaps[t.gridPosition.z].SetColor(t.gridPosition, Color.white);
+        }
     }
 }

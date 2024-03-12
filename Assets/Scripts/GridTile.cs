@@ -13,7 +13,15 @@ public class GridTile
     [Header("===== Flood Value =====")]
     public int value;
 
-    //Set to true if anything is occupying the tile.
+    /*.
+    Current Options:
+    ----------------
+    Objective
+    Friendly
+    Enemy
+    Obstacle
+    NotOccupied
+    */
     public string status;
 
     //Previous GridTile in a path.

@@ -6,7 +6,6 @@ public class Spell : Action
 {
     [Header("Spell Specific Settings")]
     
-    public int uses;
     public DamageType damageType;
 
     public Spell()
@@ -18,9 +17,9 @@ public class Spell : Action
         actionType = ActionType.Spell;
     }
 
-    public override void performAction(Stats stats, Character target)
+    public override void performAction(Character caster, Character target)
     {
-        base.performAction(stats, target);
+        base.performAction(caster, target);
     }
 
     public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)

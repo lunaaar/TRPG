@@ -30,7 +30,8 @@ public class SelfSpell : Spell
         attackTiles.Clear();
         attackTiles.Add(start);
 
-        CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
+        //CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
+        MapManager.instance.floorTilemaps[start.gridPosition.z].SetColor(start.gridPosition, GameManager.instance.friendlyFullColor);
         return attackTiles;
     }
 }

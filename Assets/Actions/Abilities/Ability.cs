@@ -5,8 +5,6 @@ using UnityEngine.Tilemaps;
 public class Ability : Action
 {
     [Header("Ability Specific Settings")]
-
-    public int uses;
     public ActionTargets targets;
 
     public Ability()
@@ -18,9 +16,9 @@ public class Ability : Action
         actionType = ActionType.Ability;
     }
 
-    public override void performAction(Stats stats, Character target)
+    public override void performAction(Character caster, Character target)
     {
-        base.performAction(stats, target);
+        base.performAction(caster, target);
     }
 
     public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)

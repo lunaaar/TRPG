@@ -80,8 +80,6 @@ public class UserInput : MonoBehaviour
     {
         if (context.performed)
         {
-            Debug.Log("TEST2");
-
             if (PauseMenu.gameIsPaused)
             {
                 playerInput.SwitchCurrentActionMap("Gameplay");

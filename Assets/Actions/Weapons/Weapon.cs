@@ -10,15 +10,17 @@ public class Weapon : Action
         range = 1;
         damage = 1;
 
+        uses = 100000;
+
         actionType = ActionType.Weapon;
     }
 
-    public override void performAction(Stats stats, Character target)
+    public override void performAction(Character caster, Character target)
     {
         //? Perform Action for a weapon is to do an Attack.
 
         //? Target.Health -= (Weapon.damage + Character.Attack) - Target.Defense;
-        var damageTaken = (stats.contains("Attack") + damage) - target.characterStats.contains("Defense");
+        var damageTaken = (caster.characterStats.contains("Attack") + damage) - target.characterStats.contains("Defense");
 
         target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
 

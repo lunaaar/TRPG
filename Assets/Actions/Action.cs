@@ -1,14 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-[CreateAssetMenu(fileName = "newBaseAction", menuName = "Actions/Action")]
 public class Action : ScriptableObject
 {
-    //. Green
-    //? Red
+    [System.Serializable]
+    public class Modification
+    {
+        public string key;
+        public Character caster;
+        public Character target;
+        public Action action;
+        public float duration;
+
+        public Modification(string k, Character c, Character t, Action a, float d)
+        {
+            key = k; caster = c; target = t; action = a; duration = d;
+        }
+    }
+
     
-    /*?
+    /*.
         Actions:
         --------
         Actions serve the purpose as the main =Scriptable Object= that all functions characters can
@@ -36,7 +49,11 @@ public class Action : ScriptableObject
         - Spell
             - Self Spell
             - AOE Spell
+                - TEST FIREBALL
             - Single Friendly Spell
+                - Heal
+                - BOOST
+                - TEST CRIT
         - Ability
             - Self Ability
 
@@ -53,9 +70,35 @@ public class Action : ScriptableObject
 
      */
 
-    [Tooltip("What is the name of the Action?")] public new string name;
-    [Tooltip("This represents what the range of the Action is")] public int range;
-    [Tooltip("This represents how much base damage the Action does")] public int damage;
+    [Header("Basic Info")]
+
+    [Tooltip("What is the name of the Action?")]
+    public new string name;
+
+    [Tooltip("This represents what the range of the Action is")]
+    public int range;
+
+    [Tooltip("This represents how much base damage the Action does")]
+    public int damage;
+
+    [Tooltip("This represents how many times an action can be used (Weapons currently have infinity uses)")]
+    public int uses;
+
+    [Tooltip("This is the icon that will be displayed for the action on the GUI")]
+    public Sprite actionIcon;
+    
+    [Space(5)]
+
+    [Header("Modification Dependent Variables")]
+
+    [Tooltip("This is a variable used to  know how many turns an effect lasts")]
+    public int duration;
+
+    [Tooltip("This is a variable used to count the amount of turns an effect has been on a target")]
+    public int count;
+
+    [Space(5)]
+
     public ActionType actionType;
     public ActionTargets actionTargets;
 
@@ -74,7 +117,11 @@ public class Action : ScriptableObject
         stats - this is a reference to the Stats object of the character who is performing the action
         target - this is a reference to the character that is the target of the action.
      */
-    public virtual void performAction(Stats stats, Character target) { }
+    public virtual void performAction(Character caster, Character target) { }
+
+    public virtual void reapplyAction(Character caster, Character target) { }
+
+    //? public virtual void undoAction(Character caster, Character target) { }
 
     public virtual List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
     {

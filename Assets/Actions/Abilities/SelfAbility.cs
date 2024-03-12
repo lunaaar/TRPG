@@ -16,9 +16,9 @@ public class SelfAbility : Ability
         targets = ActionTargets.Self;
     }
 
-    public override void performAction(Stats stats, Character target)
+    public override void performAction(Character caster, Character target)
     {
-        base.performAction(stats, target);
+        base.performAction(caster, target);
     }
 
     public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
@@ -26,7 +26,8 @@ public class SelfAbility : Ability
         attackTiles.Clear();
         attackTiles.Add(start);
 
-        CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
+        //CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
+        MapManager.instance.floorTilemaps[start.gridPosition.z].SetColor(start.gridPosition, GameManager.instance.friendlyFullColor);
         return attackTiles;
     }
 

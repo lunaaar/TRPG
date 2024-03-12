@@ -30,9 +30,9 @@ public class MeleeWeapon : Weapon
         actionTargets = ActionTargets.SingleEnemy;
     }
 
-    public override void performAction(Stats stats, Character target)
+    public override void performAction(Character caster, Character target)
     {
-        base.performAction(stats, target);
+        base.performAction(caster, target);
     }
 
     public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
@@ -91,11 +91,13 @@ public class MeleeWeapon : Weapon
         {
             if (tile.status.Equals("Enemy"))
             {
-                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
+                //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
+                MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackFullColor);
             }
             else if (pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
             {
-                CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileEmpty);
+                //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileEmpty);
+                MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackEmptyColor);
             }
         }
 

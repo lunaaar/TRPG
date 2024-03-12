@@ -8,63 +8,41 @@ public class CursorMovement : MonoBehaviour
 {
     public static CursorMovement instance;
 
-    [Header("===== Character Details =====")]
-    [Tooltip("Speed of the Character when they move")] public float speed;
+    [Header("===== Character Info =====")]
+    [Tooltip("Speed of the Character when they move")] public float movementSpeed;
+    [SerializeField] public bool characterIsMoving;
+    [SerializeField] private bool characterIsSelected;
+    [SerializeField] public bool characterActionPerformed;
+    [SerializeField] public bool characterMovementPerformed;
+    private Character character;
+    [SerializeField] public Character selectedCharacter;
     [Space(10)]
 
     [Header("===== Overlay Tile Stuff =====")]
     //TODO: No need for this to be a prefab.
     public GameObject overlayTilePrefab;
     private GameObject overlayTile;
+    [SerializeField] private Sprite mapCursor;
+    [Space(10)]
+    //public GameObject movementPreview;
 
-    //Character Stuff
-    [Header("===== Character Bools =====")]
-    private Character character;
-    [SerializeField] private bool characterIsSelected;
-    [SerializeField] private bool characterIsMoving;
-    [SerializeField] public bool characterActionPerformed;
-    [SerializeField] public bool characterMovementPerformed;
+    //? PathFinder things:
+
+    private PathFinder pathFinder;
+    private List<GridTile> path = new List<GridTile>();
+    private List<GridTile> arrowPath = new List<GridTile>();
 
     [Space(5)]
 
-    [SerializeField] public Character selectedCharacter;
-    private PathFinder pathFinder;
-    private List<GridTile> path = new List<GridTile>();
-
-    private List<GridTile> arrowPath = new List<GridTile>();
-
-    [Space(10)]
-    [Header("===== Sprite Reference =====")]
-    [SerializeField] private Sprite mapCursor;
-
-    [Space(10)]
-    [Header("===== Tilemaps & Tiles =====")]
-
-    public Tilemap tilemap;
-
-    [Space(7)]
-    public Tilemap arrowTilemap;
-    public RuleTile arrowTile;
-
-    [Space(7)]
-    public Tilemap movementRangeTilemap;
-    public RuleTile movementRuleTile;
-    public Tile movementTile;
-
-    [Space(7)]
-    public Tilemap attackRangeTilemap;
-    public RuleTile attackRuleTile;
-    public Tile attackTileEmpty;
-    public Tile attackTileActive;
-
-    [Space(3)]
-    public Tile friendlyTileEmpty;
-    public Tile friendlyTileActive;
+    [Header("Materials")]
+    public Material outline;
+    public Material @default;
+    public GameObject testDog;
 
     private void Start()
     {
         if (instance == null) instance = this;
-        
+
         overlayTile = Instantiate(overlayTilePrefab);
         overlayTile.GetComponent<SpriteRenderer>().color = Color.clear;
 
@@ -73,120 +51,101 @@ public class CursorMovement : MonoBehaviour
         characterIsSelected = false;
         characterIsMoving = false;
 
-        var filler = tilemap.CellToWorld(new Vector3Int(0, 0));
-        this.transform.position = tilemap.GetCellCenterWorld(new Vector3Int((int)filler.x, (int)filler.y));
+        //var filler = tilemap.CellToWorld(new Vector3Int(0, 0));
+        //this.transform.position = tilemap.GetCellCenterWorld(new Vector3Int((int)filler.x, (int)filler.y));
+
+        //movementPreview.SetActive(false);
+    }
+
+    private void Update()
+    {
+
     }
 
     // LateUpdate is called once per frame after Update
     void LateUpdate()
     {
-        
+        if (characterIsMoving)
+        {
+            //TODO: change this.
+            //movementPreview.SetActive(false);
+            //arrowTilemap.ClearAllTiles();
+            resetArrowPath();
+            goto handle;
+        }
+
         Vector3Int tilePos = getHoverTile();
+
+        //. If we are hovering off the tilemap.
+        if (tilePos == Vector3Int.back)
+        {
+            GetComponent<SpriteRenderer>().sprite = null;
+            goto handle;
+            //return;
+        }
 
         //var tileHit = GetFocusedOnTile();
         var characterHit = GetFocusedOnCharacter();
 
         // Gets the center of the current tile in world space.
-        var tilePosWorld = tilemap.GetCellCenterWorld(tilePos);
-
-        //If we are hovering off the tilemap.
-        if(tilePos == Vector3Int.back)
-        {
-            GetComponent<SpriteRenderer>().sprite = null;
-            return;
-        }
+        //var tilePosWorld = tilemap.GetCellCenterWorld(tilePos);
+        var tilePosWorld = MapManager.instance.floorTilemaps[tilePos.z].GetCellCenterWorld(tilePos);
 
         GetComponent<SpriteRenderer>().sprite = mapCursor;
 
-        if (path.Count == 0) characterIsMoving = false;
-
-        if (characterIsMoving)
+        //if (path.Count == 0)
+        if (path.Count == 0 && characterMovementPerformed)
         {
-            arrowTilemap.ClearAllTiles();
-            goto handle;
+            characterIsMoving = false;
         }
 
-        //? Process for displaying the movement path the character would take given current tilePos.
-        if (characterIsSelected) //. && character.selectedAction != null
+        //? Process for displaying the movement path and active spell AOE if applicable.
+        if (characterIsSelected && tilePos != selectedCharacter.gridPosition) //. && character.selectedAction != null
         {
             //Resets the arrow to new tile.
+            /*. TODO: need to rework.
             arrowTilemap.ClearAllTiles();
-            generateArrowPath(tilePos);
-
-            //if (ap.Sum(t => t.movementPenalty) <= character.movementRange + character.listOfWeapons[0].range &&
-            //    (selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]) || selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos])))
-
-            if (!characterMovementPerformed)
-            {
-                if (selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
-                {
-                    showArrowPath();
-                }
-            }
-            //else
-            if (!characterActionPerformed && selectedCharacter.selectedAction != null)
-            {
-                if (selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]))
-                {
-                    showArrowPath();
-                }
-            }
-            /**
-            if(character.selectedAction != null && !characterMovementPerformed)
-            {
-                if (selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]))
-                {
-                    //? Change this eventually to a function.
-                    
-                    foreach (GridTile gt in arrowPath)
-                    {
-                        arrowTilemap.SetTile(gt.gridPosition, arrowTile);
-                    }
-                }
-            }
-            //else if (characterMovementPerformed && selectedCharacter.movementTiles != null)
-            else if (characterMovementPerformed && !characterActionPerformed)
-            {
-                Debug.Log("WHEN DOES THIS HAPPEN");
-                //? This seems to happen when you are hovering on the tile
-                /**
-                 * //&& !character.gridPosition.Equals(tilePos)
-                if (selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
-                {
-                    Debug.Log(selectedCharacter.movementTiles.Count);
-                    Debug.Log("Arrow Path: " + arrowPath.Count);
-                    Debug.Log("TEST WHEN THIS HAPPENS");
-                    foreach (GridTile gt in arrowPath)
-                    {
-                        arrowTilemap.SetTile(gt.gridPosition, arrowTile);
-                    }
-                }
-            }
-            else
-            {
-                if(selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]) && !characterMovementPerformed)
-                {
-                    foreach (GridTile gt in arrowPath)
-                    {
-                        arrowTilemap.SetTile(gt.gridPosition, arrowTile);
-                    }
-                }
-            }
             */
+            resetArrowPath();
+            selectedCharacter.showMovementRange();
+            //MapManager.instance.resetAttackTiles();
 
+            if (selectedCharacter.selectedAction != null)
+            {
+                var action = (Action)selectedCharacter.selectedAction;
 
+                if (!characterActionPerformed && action.actionTargets == Action.ActionTargets.AOE)
+                {
+                    MapManager.instance.resetAttackTiles();
+                }
+            }
+
+            if (tilePos.z != 0)
+            {
+                calculatePath(tilePos);
+            }
         }
+        else
+        {
+            resetArrowPath();
+        }
+
+
 
         if (!UserInput.instance.selectInput) goto handle;
 
         //If we click anywhere on the map;
 
         overlayTile.transform.position = tilePosWorld;
+        overlayTile.GetComponent<SpriteRenderer>().sortingOrder = tilePos.z + 1;
 
-        movementRangeTilemap.ClearAllTiles();
-        attackRangeTilemap.ClearAllTiles();
+        //movementRangeTilemap.ClearAllTiles();
+        //MapManager.instance.resetMap();
+        MapManager.instance.resetMovementTiles();
 
-        //We click on a character
+        //TODO: attackRangeTilemap.ClearAllTiles();
+
+        //? We click on a character
         if (characterHit.HasValue)
         {
             //If we click on any character;
@@ -208,70 +167,67 @@ public class CursorMovement : MonoBehaviour
 
             if (characterIsSelected && selectedCharacter.attackTiles != null && !characterActionPerformed)
             {
+                var action = (Action)selectedCharacter.selectedAction;
+
+                var amount = arrowPath.Count - (action.range + 1);
+
+                if (action.uses <= 0)
+                {
+                    Debug.Log("CANNOT USE MOVE PICK AGAIN");
+                    goto handle;
+                }
+
                 if (selectedCharacter.attackTiles.Contains(MapManager.instance.map[character.gridPosition]))
                 {
-                    var action = (Action)selectedCharacter.selectedAction;
+                    //var action = (Action)selectedCharacter.selectedAction;
+
+                    action.uses--;
+                    action.performAction(selectedCharacter, character);
+
                     Debug.Log(selectedCharacter.characterName + " performed Action: " + action.name + " against " + character.characterName);
 
-                    action.performAction(selectedCharacter.characterStats, character);
-
                     character = selectedCharacter;
-                    //generatePath(arrowPath[Mathf.Max(arrowPath.Count - (character.listOfWeapons[0].range + 1), 0)].gridPosition);
 
-                    //. This will need to change depending on the type of action. (Heal spells might not want to move.)
-                    Debug.Log("ATTACK INFO");
-                    Debug.Log(arrowPath.Count);
-                    Debug.Log(action.range);
-                    Debug.Log(arrowPath.Count - (action.range + 1));
-                    Debug.Log("END INFO");
+                    //var amount = Mathf.Max(arrowPath.Count - (action.range + 1), 0);
 
-                    var amount = Mathf.Max(arrowPath.Count - (action.range + 1), 0);
+                    if (amount > 0)
+                    {
+                        generatePath(arrowPath[amount].gridPosition);
+                    }
 
-                    if(amount != 0) generatePath(arrowPath[Mathf.Max(arrowPath.Count - (action.range + 1), 0)].gridPosition);
+                    //if (amount != 0)
+                    //{
+                    //	generatePath(arrowPath[Mathf.Max(arrowPath.Count - (action.range + 1), 0)].gridPosition);
+                    //}
 
                     characterActionPerformed = true;
                     characterMovementPerformed = true;
                     characterIsSelected = false;
 
                     arrowPath.Clear();
-                    arrowTilemap.ClearAllTiles();
+                    //arrowTilemap.ClearAllTiles();
 
                     goto handle;
                 }
             }
 
-            //? Redo this whole section here since Actios are changing.
-
-            //If we click on an Enemy Character.
-            /**
-            if(character.alignment == Character.AlignmentStatus.Enemy)
-            {
-                if (characterIsSelected && selectedCharacter.attackTiles.Contains(MapManager.instance.map[character.gridPosition]))
-                {
-                    Debug.Log(selectedCharacter.characterName + " performed Action against " + character.characterName);
-                    //selectedCharacter.listOfWeapons[0].performAction(selectedCharacter.characterStats, character);
-                    var action = (Action)selectedCharacter.selectedAction;
-                    action.performAction(selectedCharacter.characterStats, character);
-
-                    character = selectedCharacter;
-                    //generatePath(arrowPath[Mathf.Max(arrowPath.Count - (character.listOfWeapons[0].range + 1), 0)].gridPosition);
-                    generatePath(arrowPath[Mathf.Max(arrowPath.Count - (action.range + 1), 0)].gridPosition);
-
-                    characterActionPerformed = true;
-                    goto handle;
-                }
-            }*/
-
             //We click on the same character twice.
             if (characterIsSelected && character == selectedCharacter)
             {
                 Debug.Log("Deselected: " + selectedCharacter);
-                movementRangeTilemap.ClearAllTiles();
-                attackRangeTilemap.ClearAllTiles();
+
+                //movementPreview.SetActive(false);
+
+                //movementRangeTilemap.ClearAllTiles();
+                MapManager.instance.resetMovementTiles();
+                //attackRangeTilemap.ClearAllTiles();
+                MapManager.instance.resetAttackTiles();
+
                 character.isSelected = false;
                 characterIsSelected = false;
 
                 selectedCharacter.selectedAction = null;
+                selectedCharacter.hideGUI();
 
                 selectedCharacter = null;
             }
@@ -280,8 +236,12 @@ public class CursorMovement : MonoBehaviour
             if (characterIsSelected && character != selectedCharacter)
             {
                 Debug.Log("Clicked on a different Character");
-                movementRangeTilemap.ClearAllTiles();
-                attackRangeTilemap.ClearAllTiles();
+
+                //movementRangeTilemap.ClearAllTiles();
+                MapManager.instance.resetMovementTiles();
+                //attackRangeTilemap.ClearAllTiles();
+                MapManager.instance.resetAttackTiles();
+
                 character.isSelected = false;
                 character = null;
                 characterIsSelected = false;
@@ -290,12 +250,14 @@ public class CursorMovement : MonoBehaviour
             //We click on the selected character.
             if (!characterIsSelected && character == selectedCharacter)
             {
-                Debug.Log("Clicked on selected Character " + character.name);
+                Debug.Log("Clicked on selected Character: " + character.name);
 
                 character.isSelected = true;
                 characterIsSelected = true;
 
+                selectedCharacter.GetComponent<SpriteRenderer>().material = @default;
                 selectedCharacter = character;
+                selectedCharacter.GetComponent<SpriteRenderer>().material = outline;
 
                 //. Is this necessary or can the instance of this be placed with character.showGUI();
                 GameManager.instance.showGUI(selectedCharacter, selectedCharacter.gridPosition);
@@ -304,70 +266,189 @@ public class CursorMovement : MonoBehaviour
                 character.showMovementRange();
             }
         }
-        //We click on a tile instead
+        //? We click on a tile instead
         else
         {
-            
-            //? We click on a tile while a character is selected
-            if (characterIsSelected && !characterMovementPerformed)
+            //. If the character isn't selected
+            if (!characterIsSelected)
             {
-                if (selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
-                {
-                    generatePath(arrowPath[Mathf.Max(arrowPath.Count - 1, 0)].gridPosition);
-                    characterIsMoving = true;
-                    characterMovementPerformed = true;
-
-                    //. Is this necessary or can the instance of this be placed with character.showGUI();
-                    //. We must invoke showGui again to update the referenced position for the buttons.
-
-                    GameManager.instance.showGUI(selectedCharacter, tilePos);
-
-                    goto handle;
-                }
-                else
-                {
-                    characterIsSelected = false;
-                }
-            }
-            else
-            {
-                characterIsSelected = false;
-            }
-            
-            
-            //If we are trying to pick a tile
-            if (!characterIsSelected || character.selectedAction == null)
-            {
-                //characterActionPerformed = false;
+                Debug.Log("Basic");
                 overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
+                selectedCharacter.GetComponent<SpriteRenderer>().material = @default;
+
+                characterIsSelected = false;
+                //arrowTilemap.ClearAllTiles();
+
+                goto handle;
             }
-            /**else if (selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]))
+
+            if (!characterMovementPerformed && selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]) && path.Count <= selectedCharacter.movementRange)
             {
-                if(MapManager.instance.map[tilePos].status == "Enemy")
-                {
-                    Debug.Log("Clicked on an Enemy");
-                    characterActionPerformed = true;
-                }
+                Debug.Log("MOVE TIME");
+                characterIsMoving = true;
+                characterMovementPerformed = true;
+
+                //. Is this necessary or can the instance of this be placed with character.showGUI();
+                //. We must invoke showGui again to update the referenced position for the buttons.
+
+                GameManager.instance.showGUI(selectedCharacter, tilePos);
+
+                //. arrowTilemap.ClearAllTiles();
+                resetArrowPath();
+                MapManager.instance.resetMovementTiles();
+                MapManager.instance.resetAttackTiles();
+
+                generatePath(arrowPath[Mathf.Max(arrowPath.Count - 1, 0)].gridPosition);
+
+                goto handle;
             }
-            else if (selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
+
+
+            if (!characterActionPerformed && selectedCharacter.selectedAction == null)
             {
-                characterActionPerformed = true;
+                Debug.Log("TEST2");
+
+                overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
+                selectedCharacter.GetComponent<SpriteRenderer>().material = @default;
+                characterIsSelected = false;
+
+                arrowPath.Clear();
+                //. arrowTilemap.ClearAllTiles();
+                resetArrowPath();
+
+                goto handle;
+            }
+            /**if (!characterIsSelected || selectedCharacter.selectedAction == null || characterMovementPerformed)
+            {
+                Debug.Log("TEST");
+                
+                overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
+                selectedCharacter.GetComponent<SpriteRenderer>().material = @default;
+
+                characterIsSelected = false;
+                arrowTilemap.ClearAllTiles();
+
+                goto handle;
             }*/
 
-            //generatePath(tilePos);
-            arrowTilemap.ClearAllTiles();
+            var action = (Action)selectedCharacter.selectedAction;
+
+            if (!characterActionPerformed && action.actionTargets == Action.ActionTargets.AOE)
+            {
+                Debug.Log("HUH3");
+
+                characterIsMoving = true;
+                characterMovementPerformed = true;
+                characterActionPerformed = true;
+                characterIsSelected = false;
+
+                action.uses--;
+                action.performAction(selectedCharacter, character);
+
+                Debug.Log(selectedCharacter.characterName + " performed Action: " + "\n" + action.name);
+
+                generatePath(arrowPath[Mathf.Max(arrowPath.Count - 1, 0)].gridPosition);
+
+                arrowPath.Clear();
+                //. arrowTilemap.ClearAllTiles();
+                resetArrowPath();
+
+                goto handle;
+
+            }
+
+            if (arrowPath.Count > 0)
+            {
+                generatePath(arrowPath[Mathf.Max(arrowPath.Count - 1, 0)].gridPosition);
+            }
         }
 
         handle:
         if (path.Count > 0)
+        {
             handlePath();
+        }
     }
 
     private void showArrowPath()
     {
-        foreach (GridTile gt in arrowPath)
+        /**var color = Color.white;
+        color.a = .5f;
+
+        movementPreview.SetActive(true);
+        //movementPreview.transform.position = this.transform.position;
+        movementPreview.GetComponent<SpriteRenderer>().sprite = selectedCharacter.GetComponent<SpriteRenderer>().sprite;
+        movementPreview.GetComponent<SpriteRenderer>().color = color;
+
+        //debugObject.GetComponent<SpriteRenderer>().color = Color.clear;
+        //debugObject.active = false;
+        */
+
+        //? Currently testing new arrow format.
+
+        var action = (Action)selectedCharacter.selectedAction;
+
+        if (action == null)
         {
-            arrowTilemap.SetTile(gt.gridPosition, arrowTile);
+            if (selectedCharacter.movementTiles.Contains(arrowPath[arrowPath.Count - 1]))
+            {
+                foreach (GridTile gt in arrowPath)
+                {
+                    var z = gt.gridPosition.z;
+                    MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                    MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, GameManager.instance.arrowColor);
+                }
+
+                return;
+            }
+
+            return;
+        }
+
+        if (action.GetType().ToString() == "AOESpell")
+        {
+            
+            //MapManager.instance.resetAttackTiles();
+            //TODO: Arrow stuff
+            //selectedCharacter.showMovementRange();
+
+            foreach (GridTile gt in arrowPath)
+            {
+                var z = gt.gridPosition.z;
+                MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, GameManager.instance.arrowColor);
+            }
+
+            return;
+        }
+        else if (selectedCharacter.attackTiles.Contains(arrowPath[arrowPath.Count - 1]))
+        {
+            var pathSum = pathFinder.findPath(MapManager.instance.map[selectedCharacter.gridPosition], arrowPath[arrowPath.Count - 1]).Sum(t => t.movementPenalty);
+
+
+            if (pathSum > selectedCharacter.movementRange && pathSum < selectedCharacter.movementRange + action.range)
+            {
+                return;
+            }
+            
+            var test = arrowPath.Skip(0).Take(arrowPath.Count - action.range);
+
+            foreach (GridTile gt in test)
+            {
+                var z = gt.gridPosition.z;
+                MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, GameManager.instance.arrowColor);
+            }
+        }
+        else
+        {
+            //. This seems to be called when hovering over a movement tile.
+            foreach (GridTile gt in arrowPath)
+            {
+                var z = gt.gridPosition.z;
+                MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, GameManager.instance.arrowColor);
+            }
         }
     }
 
@@ -376,7 +457,6 @@ public class CursorMovement : MonoBehaviour
         arrowPath.Clear();
 
         //? If the path is greater than 0, and is within the character's movement radius, move along the path.
-        //if (path.Count > 0 && path.Sum(t => t.movementPenalty) <= character.movementRange)
         if (path.Sum(t => t.movementPenalty) <= character.movementRange)
         {
             moveAlongPath();
@@ -392,11 +472,11 @@ public class CursorMovement : MonoBehaviour
     {
         if (characterIsSelected && character.gridPosition.Equals(tilePos))
         {
-            //characterIsSelected = false;
+            characterIsSelected = false;
         }
 
         if (characterIsSelected)
-        {   
+        {
             overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
 
             path.Clear();
@@ -405,27 +485,34 @@ public class CursorMovement : MonoBehaviour
             //characterIsSelected = false;
         }
 
-        if(character == null)
+        if (character == null)
         {
             return;
         }
-        
+
+        //? Sets the current tile the player moves to as Friendly.
+
         //path.Count <= character.movementRange
-        if (path.Sum(t => t.movementPenalty) <= character.movementRange && path.Count > 0 && !characterIsMoving)
+        if (path.Sum(t => t.movementPenalty) <= character.movementRange && path.Count > 0 && characterIsMoving)
         {
-            foreach (CapturePoint c in MapManager.instance.capturePoints)
+            if (GameManager.instance.currentLevel.levelType == Level.LevelType.CapturePoint)
             {
-                if (c.capturePointTilemapPositions.Contains(character.gridPosition))
+                var level = (Level_Capture_Point)GameManager.instance.currentLevel;
+                foreach (CapturePoint c in level.capturePoints)
                 {
-                    MapManager.instance.updateTileStatus(character.gridPosition, "Objective");
-                    break;
-                }
-                else
-                {
-                    MapManager.instance.updateTileStatus(character.gridPosition, "NotOccupied");
+                    if (c.objectivePositions.Contains(MapManager.instance.map[character.gridPosition]))
+                    {
+                        MapManager.instance.updateTileStatus(character.gridPosition, "Objective");
+                        break;
+                    }
+                    else
+                    {
+                        MapManager.instance.updateTileStatus(character.gridPosition, "NotOccupied");
+                    }
                 }
             }
 
+            MapManager.instance.updateTileStatus(character.gridPosition, "NotOccupied");
             MapManager.instance.updateTileStatus(tilePos, "Friendly");
 
         }
@@ -439,31 +526,124 @@ public class CursorMovement : MonoBehaviour
             overlayTile.GetComponent<SpriteRenderer>().color = Color.white;
 
             arrowPath.Clear();
-            arrowPath = pathFinder.findArrowPath(MapManager.instance.map[character.gridPosition], MapManager.instance.map[tilePos]);
-            //arrowPath = pathFinder.findPath(MapManager.instance.map[character.gridPos], MapManager.instance.map[tilePos]);
+            arrowPath = pathFinder.findArrowPath(MapManager.instance.map[selectedCharacter.gridPosition], MapManager.instance.map[tilePos]);
+
+            //arrowPath = pathFinder.findPath(MapManager.instance.map[selectedCharacter.gridPosition], MapManager.instance.map[tilePos]);
         }
 
         return arrowPath;
     }
 
+    private void resetArrowPath()
+    {
+        foreach (GridTile gt in arrowPath)
+        {
+            var z = gt.gridPosition.z;
+
+            if (selectedCharacter.movementTiles.Contains(gt))
+            {
+                //MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, GameManager.instance.movementEmptyColor);
+            }
+            else if (selectedCharacter.selectedAction != null)
+            {
+                /**if (selectedCharacter.attackTiles.Contains(gt))
+                {
+                    //MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                    MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, GameManager.instance.attackEmptyColor);
+                }*/
+            }
+            else
+            {
+                //MapManager.instance.floorTilemaps[z].SetTileFlags(gt.gridPosition, TileFlags.None);
+                MapManager.instance.floorTilemaps[z].SetColor(gt.gridPosition, Color.white);
+            }
+        }
+    }
+
+    private void calculatePath(Vector3Int tilePos)
+    {
+        var action = (Action)selectedCharacter.selectedAction;
+
+        //. If we have not done an action and the action has been selected.
+        if (!characterActionPerformed && action != null)
+        {
+            if (action.GetType().ToString() == "AOESpell")
+            {
+                var aoe = (AOESpell)action;
+
+                selectedCharacter.attackTiles = aoe.showActionRange(selectedCharacter.movementTiles, MapManager.instance.map[tilePos], selectedCharacter.movementRange);
+
+                var path = pathFinder.findTruePath(MapManager.instance.map[selectedCharacter.gridPosition], MapManager.instance.map[tilePos]);
+
+                if (path.Count <= selectedCharacter.movementRange + action.range && path.Count > 0)
+                {
+                    generateArrowPath(tilePos);
+                    arrowPath = arrowPath.GetRange(0, Mathf.Max(path.Count - action.range, 0));
+
+                    if (!characterMovementPerformed) showArrowPath();
+                    return;
+                }
+            }
+            else if (selectedCharacter.attackTiles.Contains(MapManager.instance.map[tilePos]))
+            {
+                generateArrowPath(tilePos);
+                showArrowPath();
+                return;
+            }
+        }
+
+        if (!characterMovementPerformed)
+        {
+            if (action != null && action.GetType().ToString() == "AOESpell")
+            {
+                generateArrowPath(selectedCharacter.gridPosition);
+            }
+            else if (selectedCharacter.movementTiles.Contains(MapManager.instance.map[tilePos]))
+            {
+                generateArrowPath(tilePos);
+                showArrowPath();
+            }
+        }
+    }
+
     private void moveAlongPath()
     {
+        Debug.Log("MOVE");
+
+        MapManager.instance.resetMovementTiles();
+
         characterIsMoving = true;
 
-        var step = speed * Time.deltaTime;
+        var step = movementSpeed * Time.deltaTime;
 
-        character.transform.position = Vector2.MoveTowards(character.transform.position, tilemap.GetCellCenterWorld(path[0].gridPosition), step);
+        //Tile temp;
+        //temp.transform.GetPosition();
 
-        if (Vector2.Distance(character.transform.position, tilemap.GetCellCenterWorld(path[0].gridPosition)) < 0.0001f)
+        // var temp = tilemap.GetCellCenterWorld(path[0].gridPosition);
+        var temp = path[0].gridPosition;
+
+        temp.z += 1;
+
+        //? used to be tilemap
+
+        character.transform.position = Vector3.MoveTowards(character.transform.position, MapManager.instance.floorTilemaps[temp.z].GetCellCenterWorld(temp), step);
+
+        //? used to be tilemap
+
+        if (Vector2.Distance(character.transform.position, MapManager.instance.floorTilemaps[temp.z].GetCellCenterWorld(temp)) < 0.0001f)
         {
-            character.updateGridPos(path[0].gridPosition);
+            character.updateGridPos(temp);
             path.RemoveAt(0);
         }
 
-        if(path.Count == 0 && characterMovementPerformed)
+        if (path.Count == 0 && characterMovementPerformed && !characterActionPerformed)
         {
-            Debug.Log("TESTSSSSSSS");
-            character.showMovementRange();
+            Debug.Log("END MOVEMENT");
+            MapManager.instance.resetMovementTiles();
+            //MapManager.instance.resetAttackTiles();
+
+            selectedCharacter.showMovementRange();
         }
 
     }
@@ -471,18 +651,38 @@ public class CursorMovement : MonoBehaviour
     //Retuns the current tile the cursor is hovering over as a Vector3Int position on the tilemap.
     public Vector3Int getHoverTile()
     {
+        //BoundsInt bounds = tilemap.cellBounds;
+        //BoundsInt bounds = MapManager.instance.floorTilemaps[0].cellBounds;
+
         var mousPos = Camera.main.ScreenToWorldPoint(UserInput.instance.moveInput);
-        var mousPos2D = new Vector2(mousPos.x, mousPos.y);
 
-        Vector3Int tilePos = tilemap.WorldToCell(mousPos2D);
-
-        Tile tile = tilemap.GetTile<Tile>(tilePos);
-
-        this.transform.position = tilemap.GetCellCenterWorld(tilePos);
-
-        if (tile != null)
+        for (int i = MapManager.instance.floorTilemaps.Length - 1; i >= 0; i--)
         {
-            return tilePos;
+            var mousPos2D = new Vector3(mousPos.x, mousPos.y, i);
+
+            Vector3Int tilePos = MapManager.instance.floorTilemaps[i].WorldToCell(mousPos2D);
+
+            //? Tile tile = tilemap.GetTile<Tile>(tilePos);
+            Tile tile = MapManager.instance.floorTilemaps[i].GetTile<Tile>(tilePos);
+
+            var test = new Vector3Int(tilePos.x, tilePos.y, tilePos.z + 1);
+
+            if (i + 1 < MapManager.instance.floorTilemaps.Length)
+            {
+                if (MapManager.instance.floorTilemaps[i + 1].GetTile<Tile>(test) != null)
+                {
+                    continue;
+                }
+            }
+
+            //? used to be tilemap. tilemap.GetCellCenterWorld(tilepos);
+            transform.position = MapManager.instance.floorTilemaps[i].GetCellCenterWorld(tilePos);
+            GetComponent<SpriteRenderer>().sortingOrder = i + 1;
+
+            if (tile != null)
+            {
+                return tilePos;
+            }
         }
 
         return Vector3Int.back;
@@ -495,9 +695,11 @@ public class CursorMovement : MonoBehaviour
         Vector3 mousPos = Camera.main.ScreenToWorldPoint(UserInput.instance.moveInput);
         Vector2 mousPos2D = new Vector2(mousPos.x, mousPos.y);
 
-        Vector3Int tilePos = tilemap.WorldToCell(mousPos2D);
 
-        RaycastHit2D hit = Physics2D.Raycast(tilemap.GetCellCenterWorld(tilePos), Vector2.zero, 1, LayerMask.GetMask("Character"));
+        //? Vector3Int tilePos = tilemap.WorldToCell(mousPos2D);
+        //Vector3Int tilePos = MapManager.instance.floorTilemaps[0].WorldToCell(mousPos2D);
+        //? RaycastHit2D hit = Physics2D.Raycast(tilemap.GetCellCenterWorld(tilePos), Vector2.zero, 1, LayerMask.GetMask("Character"));
+        RaycastHit2D hit = Physics2D.Raycast(mousPos2D, Vector2.zero, 1, LayerMask.GetMask("Character"));
 
         if (hit)
         {
