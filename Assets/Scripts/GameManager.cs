@@ -112,7 +112,7 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.I))
         {
             Debug.Log("TEST END OF TURN PROCESS");
-            CursorMovement.instance.selectedCharacter = test;
+            //CursorMovement.instance.selectedCharacter = test;
             processEndOfTurn();
         }
     }
@@ -198,45 +198,50 @@ public class GameManager : MonoBehaviour
     {
         bool didModGetRemoved = false;
 
-        //. Increases the duration of all the modifications on the selected creatures.
-        for(int i = 0; i < CursorMovement.instance.selectedCharacter.listOfModifications.Count; i++)
+        foreach(Character c in instance.listOfAllCharacters)
         {
-            Action.Modification m = CursorMovement.instance.selectedCharacter.listOfModifications[i];
-
-            m.duration--;
-
-            if (m.duration == 0)
+            for (int i = 0; i < c.listOfModifications.Count; i++)
             {
-                //m.action.undoAction(m.caster, m.target);
-                CursorMovement.instance.selectedCharacter.listOfModifications.RemoveAt(i);
-                didModGetRemoved = true;
+                Action.Modification m = c.listOfModifications[i];
+
+                m.duration--;
+
+                if (m.duration == 0)
+                {
+                    //m.action.undoAction(m.caster, m.target);
+                    c.listOfModifications.RemoveAt(i);
+                    didModGetRemoved = true;
+                }
+            }
+
+            //. Increases the duration of all the modifications on the selected creatures.
+            if (didModGetRemoved)
+            {
+                foreach (Stats.Stat s in c.characterStats.baseStats)
+                {
+                    c.characterStats.SetStats(s.key, CursorMovement.instance.selectedCharacter.characterStats.baseStatContains(s.key));
+                }
+
+                for (int j = 0; j <c.listOfModifications.Count; j++)
+                {
+                    Debug.Log(c.listOfModifications[j].key);
+                    Debug.Log(c.listOfModifications[j].action.name);
+                    Action.Modification m = c.listOfModifications[j];
+                    /*?
+                      So the current problem is uncommenting this crashes the game.
+                      This is because performAction re-adds the spell to the list of modifications.
+                      So I think we might need a new method or something. I am unsure.
+
+                      My thoughts are either some re-apply method that redos modifications. Or maybe performAction gets a
+                      boolean as well that is Used for these cases.
+                      */
+                    m.action.reapplyAction(m.caster, m.target);
+                    //m.action.performAction(m.caster, m.target);
+                }
             }
         }
 
-        if (didModGetRemoved)
-        {
-            foreach(Stats.Stat s in CursorMovement.instance.selectedCharacter.characterStats.baseStats)
-            {
-                CursorMovement.instance.selectedCharacter.characterStats.SetStats(s.key, CursorMovement.instance.selectedCharacter.characterStats.baseStatContains(s.key));
-            }
-
-            for (int j = 0; j < CursorMovement.instance.selectedCharacter.listOfModifications.Count; j++)
-            {
-                Debug.Log(CursorMovement.instance.selectedCharacter.listOfModifications[j].key);
-                Debug.Log(CursorMovement.instance.selectedCharacter.listOfModifications[j].action.name);
-                Action.Modification m = CursorMovement.instance.selectedCharacter.listOfModifications[j];
-                /*?
-                  So the current problem is uncommenting this crashes the game.
-                  This is because performAction re-adds the spell to the list of modifications.
-                  So I think we might need a new method or something. I am unsure.
-
-                  My thoughts are either some re-apply method that redos modifications. Or maybe performAction gets a
-                  boolean as well that is Used for these cases.
-                  */
-                m.action.reapplyAction(m.caster, m.target);
-                //m.action.performAction(m.caster, m.target);
-            }
-        }
+        currentLevel.processEndOfTurn();
     }
 
     public Character getCharacterAt(Vector3Int position)

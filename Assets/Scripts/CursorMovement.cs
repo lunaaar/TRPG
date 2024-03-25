@@ -131,8 +131,9 @@ public class CursorMovement : MonoBehaviour
         }
 
 
-
         if (!UserInput.instance.selectInput) goto handle;
+
+        Debug.Log("Clicked on " + tilePos + "\n" + "     Status: " + MapManager.instance.map[tilePos].status);
 
         //If we click anywhere on the map;
 

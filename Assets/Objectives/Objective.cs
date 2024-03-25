@@ -26,6 +26,19 @@ public class Objective : MonoBehaviour
         gridPosition.z -= 1;
     }
 
+    public void updateGridPos(Vector3Int gridPos)
+    {
+        var tilemap = MapManager.instance.floorTilemaps[gridPos.z];
+
+        gridPosition = gridPos;
+
+        transform.position = tilemap.GetCellCenterWorld(gridPos);
+
+        GetComponent<SpriteRenderer>().sortingOrder = gridPos.z;
+
+        gridPosition.z -= 1;
+    }
+
     public void calculateStatus()
     {
         int friendlyCount = 0;

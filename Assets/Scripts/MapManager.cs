@@ -93,7 +93,6 @@ public class MapManager : MonoBehaviour
 
         Tilemap tilemap;
 
-
         //. Process Entire Map first.
         for (int i = 0; i < floorTilemaps.Length; i++)
         {   
@@ -109,14 +108,16 @@ public class MapManager : MonoBehaviour
                     {
                         GridTile gridTile = new GridTile(location);
                         map.Add(location, gridTile);
-                        updateTileStatus(location, "Water", floorTilemaps[i]);
+                        //updateTileStatus(location, "Water", floorTilemaps[i]);
+                        updateTileStatus(location, "Water");
                     }
                     else if (floorTilemaps[i].HasTile(location))
                     {
                         GridTile gridTile = new GridTile(location);
                         map.Add(location, gridTile);
                         //floorTilemaps[i].SetTileFlags(location, TileFlags.None);
-                        updateTileStatus(location, "NotOccupied", floorTilemaps[i]);
+                        //updateTileStatus(location, "NotOccupied", floorTilemaps[i]);
+                        updateTileStatus(location, "NotOccupied");
                     }
                 }
             }
@@ -174,34 +175,21 @@ public class MapManager : MonoBehaviour
         }
 
         //. Process every character.
-        /**foreach (Character friendly in GameManager.instance.listOfAllFriendly)
-        {
-            friendly.updateGridPos();
-            tilemap = floorTilemaps[friendly.GetComponent<SpriteRenderer>().sortingOrder - 1];
-            updateTileStatus(friendly.gridPosition, "Friendly", tilemap);
-        }*/
-
-        /**foreach (Character enemy in GameManager.instance.listOfAllEnemies)
-{
-            enemy.updateGridPos();
-            tilemap = floorTilemaps[enemy.GetComponent<SpriteRenderer>().sortingOrder - 1];
-            updateTileStatus(enemy.gridPosition, "Enemy");
-        }*/
-
         foreach (Character character in GameManager.instance.listOfAllCharacters)
         {
             character.updateGridPos();
             tilemap = floorTilemaps[character.GetComponent<SpriteRenderer>().sortingOrder - 1];
-            updateTileStatus(character.gridPosition, character.alignment.ToString(), tilemap);
+            //updateTileStatus(character.gridPosition, character.alignment.ToString(), tilemap);
+            updateTileStatus(character.gridPosition, character.alignment.ToString());
         }
 
         //. Sets all tiles with any obstacles on to occupied.
         foreach (Obstacle obstacle in obstacles)
         {
-            updateTileStatus(obstacle.gridPos, "Obstacle");
+            updateTileStatus(obstacle.gridPosition, "Obstacle");
             foreach (Vector3Int pos in obstacle.usedSpaces)
             {
-                updateTileStatus(pos + obstacle.gridPos, "Obstacle");
+                updateTileStatus(pos + obstacle.gridPosition, "Obstacle");
             }
         }
     }
@@ -286,7 +274,37 @@ public class MapManager : MonoBehaviour
 
     public void updateTileStatus(Vector3Int location, string status)
     {
-        Debug.Log("UpdateTileStatus Filler");
+        map[location].status = status;
+
+        if (debugMode)
+        {
+            switch (status)
+            {
+                case "NotOccupied":
+                    floorTilemaps[location.z].SetTile(location, notOccupiedTile);
+                    break;
+                case "Friendly":
+                    floorTilemaps[location.z].SetTile(location, occupiedTile);
+                    break;
+                case "Enemy":
+                    floorTilemaps[location.z].SetTile(location, occupiedTile);
+                    break;
+                case "Objective":
+                    floorTilemaps[location.z].SetTile(location, objectiveTile);
+                    break;
+                case "Obstacle":
+                    floorTilemaps[location.z].SetTile(location, obstacleTile);
+                    break;
+                case "ObjectiveBase":
+                    floorTilemaps[location.z].SetTile(location, objectiveBaseTile);
+                    break;
+                case "Water":
+                    floorTilemaps[location.z].SetTile(location, waterTile);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     public void updateTileStatus(Vector3Int location, string status, Tilemap tilemap)

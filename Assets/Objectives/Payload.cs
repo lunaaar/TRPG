@@ -8,9 +8,14 @@ public class Payload : Objective
     
     [Header("====== Payload ======")]
     [Range(1, 6)] [Tooltip("How big is the cube radius of the zone")] public int influenceRange = 3;
+    [Range(1, 6)] public int movementSpeed;
 
+    [Space(5)]
     public List<Vector3> displayPayloadPath;
-    public List<Vector3Int> payloadPath;
+    public List<Vector3Int> payloadPath; //? List of Grid positions
+
+    public Vector3Int next;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -24,6 +29,27 @@ public class Payload : Objective
         {
             payloadPath.Add(MapManager.instance.floorTilemaps[(int)v.z - 1].WorldToCell(v));
         }
+
+        next = payloadPath[1];
+    }
+
+    public void moveAlongPath()
+    {
+        var step = movementSpeed * Time.deltaTime;
+
+        transform.position = Vector3.MoveTowards(transform.position, MapManager.instance.floorTilemaps[next.z].GetCellCenterWorld(next), step);
+
+        if (Vector2.Distance(transform.position, MapManager.instance.floorTilemaps[next.z].GetCellCenterWorld(next)) < 0.0001f)
+        {
+            MapManager.instance.updateTileStatus(gridPosition, "NotOccupied");
+
+            updateGridPos(next);
+
+            resetTilemap();
+
+            updateTilemap();
+            return;
+        }
     }
 
     public void updateTilemap()
@@ -34,13 +60,22 @@ public class Payload : Objective
 
         foreach (GridTile tile in objectivePositions)
         {
-            var z = tile.gridPosition.z;
+            if(MapManager.instance.map[tile.gridPosition].status == "NotOccupied")
+            {
+                MapManager.instance.updateTileStatus(tile.gridPosition, "Objective");
+            }
+        }
 
-            MapManager.instance.map[tile.gridPosition].status = "Objective";
-            //MapManager.instance.floorTilemaps[tilePosition.z].SetTileFlags(tilePosition, TileFlags.None);
-            //Debug.Log(MapManager.instance.floorTilemaps[tilePosition.z].GetColor(tilePosition));
-            MapManager.instance.floorTilemaps[z].SetColor(tile.gridPosition, GameManager.instance.testColor);
-            //Debug.Log(MapManager.instance.floorTilemaps[tilePosition.z].GetColor(tilePosition));
+        MapManager.instance.updateTileStatus(gridPosition, "ObjectiveBase");
+    }
+    public void resetTilemap()
+    {
+        foreach (GridTile tile in objectivePositions)
+        {
+            if(tile.status == "Objective")
+            {
+                MapManager.instance.updateTileStatus(tile.gridPosition, "NotOccupied");
+            }
         }
     }
 }

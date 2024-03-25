@@ -20,8 +20,21 @@ public class Level_Payload : Level
     public override void processEndOfTurn()
     {
         //. Check status, if friendly push 1 more forward.
-        
-        throw new System.NotImplementedException();
+
+        payload.calculateStatus();
+
+        Debug.Log("Payload: " + payload.name +"\n"+
+            "Status: " + payload.status) ;
+
+        if(payload.status == Objective.Status.Friendly)
+        {
+            while (payload.gridPosition != (payload.next + Vector3Int.back))// && count < 100)
+            {
+                payload.moveAlongPath();
+            }
+
+            payload.next = payload.payloadPath[Mathf.Min(payload.payloadPath.IndexOf(payload.next) + 1, payload.payloadPath.Count - 1)];
+        }
     }
 
     public override bool checkWinCondition()

@@ -52,4 +52,18 @@ public class CapturePoint : Objective
             //Debug.Log(MapManager.instance.floorTilemaps[tilePosition.z].GetColor(tilePosition));
         }
     }
+
+    public void resetTilemap()
+    {
+        foreach (GridTile tile in objectivePositions)
+        {
+            var z = tile.gridPosition.z;
+
+            MapManager.instance.map[tile.gridPosition].status = "NotOccupied";
+            //MapManager.instance.floorTilemaps[tilePosition.z].SetTileFlags(tilePosition, TileFlags.None);
+            //Debug.Log(MapManager.instance.floorTilemaps[tilePosition.z].GetColor(tilePosition));
+            MapManager.instance.floorTilemaps[z].SetColor(tile.gridPosition, Color.white);
+            //Debug.Log(MapManager.instance.floorTilemaps[tilePosition.z].GetColor(tilePosition));
+        }
+    }
 }

@@ -65,8 +65,8 @@ public class Character : MonoBehaviour
 
     [Header("====== Grid Info ======")]
     [Tooltip("Position of the player on the grid")] public Vector3Int gridPosition;
-    [Tooltip("Reference to the grid")] public GameObject gridReference;
-    private Tilemap tilemapReference;
+    //[Tooltip("Reference to the grid")] public GameObject gridReference;
+    //private Tilemap tilemapReference;
     private PathFinder pathFinder;
 
     [Header("TEST STUFF")]

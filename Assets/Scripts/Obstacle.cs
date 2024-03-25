@@ -15,10 +15,10 @@ public class Obstacle : MonoBehaviour
      * <-1,0> is for down left
      * <0,-1> is for down right
      */
-    public List<Vector2Int> usedSpaces;
+    public List<Vector3Int> usedSpaces;
     
     [Header("====== Grid Info ======")]
-    [Tooltip("Position of the player on the grid")] public Vector3Int gridPos;
+    [Tooltip("Position of the player on the grid")] public Vector3Int gridPosition;
     [Tooltip("Reference to the grid")] public GameObject grid;
     private Tilemap t;
 
@@ -27,18 +27,18 @@ public class Obstacle : MonoBehaviour
         t = grid.GetComponentInChildren<Tilemap>();
 
         //Alligns internal grid position with where it actually is;
-        gridPos = t.WorldToCell(this.transform.position);
-        this.transform.position = t.GetCellCenterWorld(gridPos);
+        gridPosition = t.WorldToCell(this.transform.position);
+        this.transform.position = t.GetCellCenterWorld(gridPosition);
     }
     public void updateGridPos(Vector3Int v)
     {
-        gridPos = v;
-        this.transform.position = t.GetCellCenterWorld(gridPos);
+        gridPosition = v;
+        this.transform.position = t.GetCellCenterWorld(gridPosition);
     }
 
     public void updateGridPos()
     {
-        gridPos = grid.GetComponentInChildren<Tilemap>().WorldToCell(this.transform.position);
-        this.transform.position = t.GetCellCenterWorld(gridPos);
+        gridPosition = grid.GetComponentInChildren<Tilemap>().WorldToCell(this.transform.position);
+        this.transform.position = t.GetCellCenterWorld(gridPosition);
     }
 }
