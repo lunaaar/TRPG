@@ -27,17 +27,15 @@ public class SingleEnemySpell : Spell
         damageType = DamageType.Necrotic;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
         //TODO: DO THIS 
         
-        base.performAction(caster, target);
+        return base.performAction(caster, target, justCalculate);
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        PathFinder pathFinder = new PathFinder();
-
         //List<GridTile> attackTiles = new List<GridTile>();
         attackTiles.Clear();
 
@@ -52,18 +50,18 @@ public class SingleEnemySpell : Spell
 
             foreach (var tile in attackTilesToCheck)
             {
-                surroundingTiles.AddRange(pathFinder.getNeighbourAttackTiles(tile));
+                surroundingTiles.AddRange(GameManager.instance.pathFinder.getNeighbourAttackTiles(tile));
             }
 
             surroundingTiles = surroundingTiles.Distinct().ToList();
 
             foreach (var tile in surroundingTiles)
             {
-                if (tile.status.Equals("Friendly") && !tile.Equals(start))
+                if (tile.status.Equals(casterAlignment) && !tile.Equals(start))
                 {
                     continue;
                 }
-                else if (tile.status.Equals("Enemy"))
+                else if (tile.status.Equals(GameManager.instance.getOtherAlignemnt(casterAlignment)))
                 {
                     attackTiles.Add(tile);
                 }
@@ -72,7 +70,7 @@ public class SingleEnemySpell : Spell
                     attackTilesToCheck.Add(tile);
                 }
 
-                var path = pathFinder.findPath(start, tile);
+                var path = GameManager.instance.pathFinder.findPath(start, tile);
                 if ((path.Sum(t => t.movementPenalty) <= range + movementRange && path.Sum(t => t.movementPenalty) > movementRange) || path.Count == range + movementRange)
                 {
                     attackTiles.Add(tile);
@@ -86,14 +84,19 @@ public class SingleEnemySpell : Spell
         attackTiles = attackTiles.Distinct().ToList();
         attackTiles.Remove(start);
 
+        if (justCalculate)
+        {
+            return attackTiles;
+        }
+
         foreach (var tile in attackTiles)
         {
-            if (tile.status.Equals("Enemy"))
+            if (tile.status.Equals(GameManager.instance.getOtherAlignemnt(casterAlignment)))
             {
                 //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
                 MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackFullColor);
             }
-            else if (pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
+            else if (GameManager.instance.pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
             {
                 //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileEmpty);
                 MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackEmptyColor);

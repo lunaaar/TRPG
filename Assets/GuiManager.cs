@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class PauseMenu : MonoBehaviour
+
+//TODO: Rename to GUI or GUI_Menu?
+public class GuiManager : MonoBehaviour
 {
-    public static PauseMenu instance;
+    public static GuiManager instance;
     public static bool gameIsPaused = false;
+
+    public GameObject damageNumberPrefab;
 
     [Space(5)]
     [Header("Page Info")]
@@ -22,6 +26,12 @@ public class PauseMenu : MonoBehaviour
     [Space(5)]
     [Header("References")]
     [SerializeField] private GameObject guiReference;
+    [SerializeField] private GameObject leftButton;
+    [SerializeField] private GameObject rightButton;
+
+    [Space(5)]
+    [Header("Action UI")]
+    [SerializeField] private GameObject actionUI;
 
     private void Awake()
     {
@@ -33,6 +43,7 @@ public class PauseMenu : MonoBehaviour
     void Start()
     {
         currentPage = 0;
+        actionUI.SetActive(false);
     }
 
     public void Resume()
@@ -40,7 +51,7 @@ public class PauseMenu : MonoBehaviour
 
         Debug.Log("Resume");
 
-        Cursor.visible = false;
+        //Cursor.visible = false;
         pages[currentPage].SetActive(false);
         Time.timeScale = 1f;
         gameIsPaused = false;
@@ -56,6 +67,9 @@ public class PauseMenu : MonoBehaviour
         guiReference.SetActive(false);
         pauseMenu.SetActive(true);
         currentPage = 0;
+
+        leftButton.SetActive(false);
+
         pages[currentPage].SetActive(true);
 
         EventSystem.current.SetSelectedGameObject(null);
@@ -68,19 +82,73 @@ public class PauseMenu : MonoBehaviour
     // Arrow Button Functions
     public void previousPage()
     {
+        leftButton.SetActive(true);
+        rightButton.SetActive(true);
+
         pages[currentPage].SetActive(false);
         currentPage = Mathf.Max(currentPage -= 1, 0);
+
+        if (currentPage == 0)
+        {
+            leftButton.SetActive(false);
+        }
+
         pages[currentPage].SetActive(true);
     }
 
     public void nextPage()
     {
+        leftButton.SetActive(true);
+        rightButton.SetActive(true);
+
         pages[currentPage].SetActive(false);
         currentPage = Mathf.Min(currentPage += 1, pages.Count-1);
+
+        if(currentPage == pages.Count - 1)
+        {
+            rightButton.SetActive(false);
+        }
+
         pages[currentPage].SetActive(true);
     }
 
 
+    public bool isMouseOverUI()
+    {
+        return EventSystem.current.IsPointerOverGameObject();
+    }
+
+    /**
+     * Buttons
+     * 
+     */
+
+    public void moveButton()
+    {
+        hideAttackUI();
+        CursorMovement.instance.showMovementPath = true;
+        //CursorMovement.instance.selectedCharacter.showMovementRange();
+    }
+
+    public void actionButton()
+    {
+        CursorMovement.instance.selectedCharacter.setupActionButtons(CursorMovement.instance.selectedCharacter.gridPosition);
+        CursorMovement.instance.showMovementPath = true;
+        actionUI.SetActive(true);
+    }
+
+    public void noneButton()
+    {
+        hideAttackUI();
+        MapManager.instance.resetMovementTiles();
+        MapManager.instance.resetAttackTiles();
+        CursorMovement.instance.showMovementPath = false;
+    }
+
+    public void hideAttackUI()
+    {
+        actionUI.SetActive(false);
+    }
 
     public void LoadMenu()
     {

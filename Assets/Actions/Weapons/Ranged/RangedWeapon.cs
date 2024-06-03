@@ -9,7 +9,6 @@ public class RangedWeapon : Weapon
     List<GridTile> attackTiles = new List<GridTile>();
     List<GridTile> surroundingTiles = new List<GridTile>();
 
-
     [Tooltip("How close can the enemy be for you to hit them with this weapon in tiles")]
     public int closestAttackRange;
 
@@ -22,15 +21,13 @@ public class RangedWeapon : Weapon
         actionTargets = ActionTargets.SingleEnemy;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
-        base.performAction(caster, target);
+        return base.performAction(caster, target, justCalculate);
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        PathFinder pathFinder = new PathFinder();
-
         attackTiles.Clear();
 
         int step = 0;
@@ -43,18 +40,18 @@ public class RangedWeapon : Weapon
 
             foreach (var tile in attackTilesToCheck)
             {
-                surroundingTiles.AddRange(pathFinder.getNeighbourAttackTiles(tile));
+                surroundingTiles.AddRange(GameManager.instance.pathFinder.getNeighbourAttackTiles(tile));
             }
 
             surroundingTiles = surroundingTiles.Distinct().ToList();
 
             foreach (var tile in surroundingTiles)
             {
-                if (tile.status.Equals("Friendly") && !tile.Equals(start))
+                if (tile.status.Equals(casterAlignment) && !tile.Equals(start))
                 {
                     continue;
                 }
-                else if (tile.status.Equals("Enemy"))
+                else if (tile.status.Equals(GameManager.instance.getOtherAlignemnt(casterAlignment)))
                 {
                     attackTiles.Add(tile);
                 }
@@ -63,7 +60,7 @@ public class RangedWeapon : Weapon
                     attackTilesToCheck.Add(tile);
                 }
 
-                var path = pathFinder.findPath(start, tile);
+                var path = GameManager.instance.pathFinder.findPath(start, tile);
                 if (path.Sum(t => t.movementPenalty) >= closestAttackRange + movementRange
                        && path.Sum(t => t.movementPenalty) <= range + movementRange)
                 {
@@ -78,14 +75,19 @@ public class RangedWeapon : Weapon
         attackTiles = attackTiles.Distinct().ToList();
         attackTiles.Remove(start);
 
+        if (justCalculate)
+        {
+            return attackTiles;
+        }
+
         foreach (var tile in attackTiles)
         {
-            if (tile.status.Equals("Enemy"))
+            if (tile.status.Equals(GameManager.instance.getOtherAlignemnt(casterAlignment)))
             {
                 //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
                 MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackFullColor);
             }
-            else if (pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
+            else if (GameManager.instance.pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
             {
                 //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileEmpty);
                 MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackEmptyColor);

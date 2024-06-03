@@ -2,40 +2,107 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Linq;
 
-public class Enemy : MonoBehaviour
+public class Enemy : Character
 {
-    //FIX A LOT OF THINGS
-    
-    
-    
-    
-    
-    
-    
-    
-    [Header("===== Enemy Stats =====")]
-    public string enemyName;
-    [Range(1, 6)] [Tooltip("How many tiles can this character move?")] public int movementRange = 3;
-    public int currentHealth = 10;
-    public int maxHealth = 10;
-    public List<Weapon> weapons;
-
-    public enum AlignmentStatus { Friendly, Neutral, Enemy }
-    [Tooltip("Alignment Status of the Character, determines how the manager treats this character.")] public AlignmentStatus alignment;
-
-    [Header("====== Grid Info ======")]
-    [Tooltip("Position of the player on the grid")] public Vector3Int gridPos;
-    [Tooltip("Reference to the grid")] public GameObject grid;
-    private Tilemap t;
-    private PathFinder pathFinder;
-
-    private void Awake()
+    public class EnemyAction
     {
-        t = grid.GetComponentInChildren<Tilemap>();
+        public Action action;
+        public GridTile tileToMoveTo;
+        public Character target;
+        public int score;
 
-        //Alligns internal grid position with where it actually is;
-        gridPos = t.WorldToCell(this.transform.position);
-        this.transform.position = t.GetCellCenterWorld(gridPos);
+        public EnemyAction(Action a, GridTile mt, Character t, int s)
+        {
+            action = a; tileToMoveTo = mt; target = t; score = s;
+        }
+
+        public string ToString()
+        {
+            return "\n" + "Action: " + action.name + "\n"
+                +  "Move to tile " + tileToMoveTo.gridPosition + "\n"
+                + "Target: " + target.name + "\n"
+                + "Score: " + score;
+        }
+    }
+
+
+    public void Update()
+    {
+        
+    }
+
+    public Enemy()
+    {
+        alignment = AlignmentStatus.Enemy;
+    }
+    
+    public EnemyAction calculateBestMove()
+    {
+        //? Write notes here on how it will work.
+
+        List<EnemyAction> testList = new List<EnemyAction>();
+
+        List<Action> actionList = new List<Action>();
+
+        actionList.AddRange(listOfWeapons);
+        actionList.AddRange(listOfSpells);
+        actionList.AddRange(listOfAbilities);
+
+        var movementTiles = getTilesInRange(movementRange);
+
+        //List<GridTile> actionRangeList = a.showActionRange(movementTiles, MapManager.instance.map[gridPosition], movementRange, alignment.ToString(), true);
+
+        //Debug.Log(actionRangeList.Count);
+
+        foreach (GridTile tile in movementTiles)
+        {
+            var path = GameManager.instance.pathFinder.findPath(MapManager.instance.map[gridPosition], tile);
+
+            int score = path.Sum(t => t.movementPenalty);
+
+            foreach (Action a in actionList)
+            {
+                if(a.uses == 0)
+                {
+                    continue;
+                }
+                
+                List<GridTile> actionRangeList = a.showActionRange(movementTiles, tile, 0, alignment.ToString(), true);
+
+                if (a.actionTargets == Action.ActionTargets.AOE)
+                {
+                    //? Extra bullshit because of AOE.
+                    foreach (GridTile tile2 in actionRangeList)
+                    {
+                        score += a.performAction(this, this, true);
+                    }
+                }
+                else
+                {
+                    foreach (GridTile tile2 in actionRangeList)
+                    {
+                        Character characterAt = GameManager.instance.getCharacterAt(tile2.gridPosition);
+                        if (characterAt != null && characterAt != this && GameManager.instance.pathFinder.findPath(tile, tile2).Count == a.range)
+                        {
+                            var test = score + a.performAction(this, GameManager.instance.getCharacterAt(tile2.gridPosition), true);
+
+                            testList.Add(new EnemyAction(a, tile,
+                                GameManager.instance.getCharacterAt(tile2.gridPosition),
+                                score + test));
+                        }
+                        
+                        //score += a.performAction(this, GameManager.instance.getCharacterAt(tile2.gridPosition), true);
+
+                    }
+                }
+
+            }
+        }
+
+        List<EnemyAction> sortedList = testList.OrderByDescending(o => o.score).ToList();
+
+        return sortedList[0];
     }
 }

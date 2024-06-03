@@ -25,10 +25,15 @@ public class SelfSpell : Spell
         damageType = DamageType.Holy;
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
         attackTiles.Clear();
         attackTiles.Add(start);
+
+        if (justCalculate)
+        {
+            return attackTiles;
+        }
 
         //CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
         MapManager.instance.floorTilemaps[start.gridPosition.z].SetColor(start.gridPosition, GameManager.instance.friendlyFullColor);

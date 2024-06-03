@@ -12,8 +12,13 @@ public class GameManager : MonoBehaviour
     
     public List<Character> combatOrder;
     private int count;
+    public bool hasEnemyActed;
 
     public Level currentLevel;
+
+    public PathFinder pathFinder;
+
+    public GameObject combatUIReference;
 
     [Space(5)]
 
@@ -53,6 +58,8 @@ public class GameManager : MonoBehaviour
 
         if (instance == null) instance = this;
 
+        pathFinder = new PathFinder();
+
         listOfAllCharacters = ((Character[])FindObjectsOfType(typeof(Character))).ToList();
         listOfAllFriendly = new List<Character>();
         listOfAllEnemies = new List<Character>();
@@ -64,9 +71,11 @@ public class GameManager : MonoBehaviour
             if (c.alignment == Character.AlignmentStatus.Friendly)
             {
                 listOfAllFriendly.Add(c);
-                c.uiReference = PauseMenu.instance.charaterStatsDisplay[counter];
+                c.uiReference = GuiManager.instance.charaterStatsDisplay[counter];
 
-                var temp = c.uiReference.GetComponentsInChildren<Image>()[1];
+                c.setUpStatScreen();
+
+              /*var temp = c.uiReference.GetComponentsInChildren<Image>()[1];
                 temp.sprite = c.characterImage;
                 temp.color = Color.white;
 
@@ -74,7 +83,7 @@ public class GameManager : MonoBehaviour
 
                 arrayOfTexts[0].text = c.name;
                 arrayOfTexts[1].text = c.characterStats.contains("maxHealth").ToString();
-                arrayOfTexts[3].text = c.characterStats.contains("currentHealth").ToString();
+                arrayOfTexts[3].text = c.characterStats.contains("currentHealth").ToString();*/
 
                 counter++;
             }
@@ -89,24 +98,19 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         //Cursor.visible = false;
-
+        hasEnemyActed = false;
     }
 
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-
-        }
-
         if (Input.GetKeyDown(KeyCode.K))
         {
             BOOST boost = new BOOST();
-            boost.performAction(test, test);
+            boost.performAction(test, test, false);
 
             TestCrit crit = new TestCrit();
-            crit.performAction(test, test);
+            crit.performAction(test, test, false);
         }
 
         if (Input.GetKeyDown(KeyCode.I))
@@ -114,6 +118,11 @@ public class GameManager : MonoBehaviour
             Debug.Log("TEST END OF TURN PROCESS");
             //CursorMovement.instance.selectedCharacter = test;
             processEndOfTurn();
+        }
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            StartCoroutine(enemyAction());
         }
     }
 
@@ -147,57 +156,128 @@ public class GameManager : MonoBehaviour
                     Debug.Log(CursorMovement.instance.selectedCharacter.name + " takes their turn");
                     //Debug.Log(CursorMovement.instance.selectedCharacter.name);
                     processEndOfTurn();
-                    updateCombatOrder();
+                    StartCoroutine(updateCombatOrder());
                     CursorMovement.instance.characterActionPerformed = false;
                     CursorMovement.instance.characterMovementPerformed = false;
                     count++;
                 }
                 break;
             case (Character.AlignmentStatus.Enemy):
-                Debug.Log(CursorMovement.instance.selectedCharacter.name + " takes their turn");
+
+                if (!hasEnemyActed)
+                {
+                    Debug.Log(CursorMovement.instance.selectedCharacter.name + " takes their turn");
+
+                    StartCoroutine(enemyAction());
+                    hasEnemyActed = true;
+                }
+                
+
+                //CursorMovement.instance.characterIsSelected = true;
 
                 //Enemy would do some logic here to attack or defend or something.
-                updateCombatOrder();
-                count++;
+                //Enemy enemy = (Enemy)CursorMovement.instance.selectedCharacter;
+
+                //Debug.Log("Enemy: " + enemy.name);
+
+                //Enemy.EnemyAction test = enemy.calculateBestMove();
+
+                //Debug.Log(test.ToString());
+
+                //CursorMovement.instance.generatePath(test.tileToMoveTo.gridPosition);
+
+                //test.action.performAction(enemy, test.target, false);
+
+                //updateCombatOrder();
+
+                if (CursorMovement.instance.characterMovementPerformed &&
+                    CursorMovement.instance.characterActionPerformed &&
+                    !CursorMovement.instance.characterIsMoving)
+                {
+                    processEndOfTurn();
+                    StartCoroutine(updateCombatOrder());
+                    CursorMovement.instance.characterActionPerformed = false;
+                    CursorMovement.instance.characterMovementPerformed = false;
+                    count++;
+                }
+                //count++;
                 break;
             default:
                 break;
         }
     }
 
+
+    public IEnumerator enemyAction()
+    {
+        yield return new WaitForSeconds(3);
+
+        Enemy enemy = (Enemy)CursorMovement.instance.selectedCharacter;
+
+        Enemy.EnemyAction test = enemy.calculateBestMove();
+
+        CursorMovement.instance.characterIsSelected = true;
+
+        CursorMovement.instance.characterIsMoving = true;
+
+        test.action.uses--;
+        test.action.performAction(enemy, test.target, false);
+
+        CursorMovement.instance.generatePath(test.tileToMoveTo.gridPosition);
+
+        CursorMovement.instance.characterActionPerformed = true;
+
+        CursorMovement.instance.characterIsSelected = false;
+
+        updateCombatOrder();
+    }
+
     public void showGUI(Character character, Vector3Int gP)
     {
-        character.showGUI(gP);
+        combatUIReference.SetActive(true);
+        //character.showGUI(gP);
     }
 
     public void hideGUI(Character character)
     {
+        combatUIReference.SetActive(false);
         character.hideGUI();
     }
 
     private void getCombatOrder()
     {
-        //combatOrder = new List<Character>(FindObjectsOfType<Character>());
         combatOrder = new List<Character>(listOfAllCharacters);
         combatOrder = combatOrder.OrderByDescending(ch => ch.characterStats.contains("Speed")).ToList();
         tempText.text = "Current Character: " + combatOrder[0].name;
 
     }
 
-    private void updateCombatOrder()
+    private IEnumerator updateCombatOrder()
     {
+        Debug.Log("Update Combat Order");
+
+        yield return new WaitForSeconds(1);
+
         var character = combatOrder[0];
         combatOrder.Remove(combatOrder[0]);
         combatOrder.Add(character);
 
         tempText.text = "Current Character: " + combatOrder[0].name;
         CursorMovement.instance.selectedCharacter = combatOrder[0];
+
+        if(CursorMovement.instance.selectedCharacter.alignment == Character.AlignmentStatus.Enemy)
+        {
+            hasEnemyActed = false;
+        }
     }
 
     private void processEndOfTurn()
     {
+        Debug.Log("Process end of turn");
+
         bool didModGetRemoved = false;
 
+        //. Process Modification Stuff
         foreach(Character c in instance.listOfAllCharacters)
         {
             for (int i = 0; i < c.listOfModifications.Count; i++)
@@ -251,5 +331,13 @@ public class GameManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    public string getOtherAlignemnt(string alignment)
+    {
+        if (alignment == "Friendly") return "Enemy";
+        else if (alignment == "Enemy") return "Friendly";
+
+        return "";
     }
 }

@@ -106,7 +106,6 @@ public class Action : ScriptableObject
     public enum ActionTargets { SingleEnemy, SingleAlly, AOE, Self, MultipleEnemies, MultipleAllies }
     public enum DamageType { Holy, Necrotic, Fire, Water, Lightning, Nature }
 
-
     /*?
         performAction(Stats stats, Character target)
         ------
@@ -117,13 +116,13 @@ public class Action : ScriptableObject
         stats - this is a reference to the Stats object of the character who is performing the action
         target - this is a reference to the character that is the target of the action.
      */
-    public virtual void performAction(Character caster, Character target) { }
+    public virtual int performAction(Character caster, Character target, bool justCalculate) { return 0; }
 
-    public virtual void reapplyAction(Character caster, Character target) { }
+    public virtual int reapplyAction(Character caster, Character target) { return 0; }
 
     //? public virtual void undoAction(Character caster, Character target) { }
 
-    public virtual List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public virtual List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
         //. This is the old default show method. Just here for reference incase needed again.
         

@@ -14,4 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   name: New Self Ability
   range: 0
+  damage: 0
   uses: 3
+  actionIcon: {fileID: 0}
+  duration: 0
+  count: 0
+  actionType: 2
+  actionTargets: 0
+  targets: 3

@@ -12,7 +12,7 @@ public class Level_Kill_All : Level
 
     public override void processEndOfTurn()
     {
-        throw new System.NotImplementedException();
+        Debug.Log("Kill All End of Turn.");
     }
 
     public override bool checkWinCondition()

@@ -6,18 +6,26 @@ using UnityEngine.InputSystem;
 public class UserInput : MonoBehaviour
 {
     public static UserInput instance;
-    [Range(0, 2)] public float sensitivity;
+    public Vector2 baseSens; //? This doesn't change.
+    [Range(0, 1)] public float sensitivity;
+    public Mouse mouse;
+
     public Vector2 moveInput { get; private set; }
     [SerializeField] private Vector2 moveDirection;
+    private Vector2 overflow;
 
-    public bool selectInput { get; private set; }
+    public bool tapSelectInput { get; private set; }
+    public bool holdSelectInput { get; private set; }
     public bool menuInput { get; private set; }
     private PlayerInput playerInput;
-    private InputAction selectAction;
+    private InputAction tapSelectAction;
+    private InputAction holdSelectAction;
 
     [Space(7)]
 
     [Header("===== Audio Clips =====")]
+
+    //TODO: I should honestly really move these to the other code in the pause menu script.
 
     [SerializeField] private AudioSource bookOpen;
     [SerializeField] private AudioSource bookClose;
@@ -32,11 +40,22 @@ public class UserInput : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
 
         setupInputActions();
+
+        mouse = Mouse.current;
+    }
+
+    private void OnDisable()
+    {
+        tapSelectAction.Disable();
+        holdSelectAction.Disable();
     }
     private void setupInputActions()
     {
-        selectAction = playerInput.actions["Select"];
-        selectAction.Enable();
+        tapSelectAction = playerInput.actions["TapSelect"];
+        tapSelectAction.Enable();
+
+        holdSelectAction = playerInput.actions["HoldSelect"];
+        holdSelectAction.Enable();
 
         moveInput = new Vector2(590, 274);
     }
@@ -67,30 +86,50 @@ public class UserInput : MonoBehaviour
         }
         else if (playerInput.currentControlScheme == "Gamepad" || playerInput.currentControlScheme == "Keyboard")
         {
-            moveInput += move * sensitivity;
+            //moveInput += move * sensitivity;
+
+            if (move.magnitude < 0.1f) return;
+
+            var mousePosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+
+            var warpPosition = mousePosition + overflow + baseSens * Time.deltaTime * move * sensitivity;
+
+            warpPosition = new Vector2(Mathf.Clamp(warpPosition.x, 0, Screen.width), Mathf.Clamp(warpPosition.y, 0, Screen.height));
+
+            overflow = new Vector2(warpPosition.x % 1, warpPosition.y % 1);
+
+            //Pointer.current.position = warpPosition;
+            //Mouse.current.WarpCursorPosition(warpPosition);
+            moveInput = warpPosition;
         }
     }
 
     private void UpdateGameplayInputs()
     {
-        selectInput = selectAction.WasPressedThisFrame();
+        holdSelectInput = holdSelectAction.triggered;
+
+        //tapSelectInput = tapSelectAction.WasPressedThisFrame();
+        tapSelectInput = tapSelectAction.triggered;
+
+        Debug.Log(tapSelectInput);
+
     }
 
     public void OpenUI(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            if (PauseMenu.gameIsPaused)
+            if (GuiManager.gameIsPaused)
             {
                 playerInput.SwitchCurrentActionMap("Gameplay");
                 bookClose.Play();
-                PauseMenu.instance.Resume();
+                GuiManager.instance.Resume();
             }
             else
             {
                 playerInput.SwitchCurrentActionMap("MenuNav");
                 bookOpen.Play();
-                PauseMenu.instance.Pause();
+                GuiManager.instance.Pause();
             }
         }
     }
@@ -100,7 +139,7 @@ public class UserInput : MonoBehaviour
     IEnumerator nextPage()
     {
         changePageSound.Play();
-        PauseMenu.instance.nextPage();
+        GuiManager.instance.nextPage();
         yield return null;
     }
 
@@ -127,7 +166,7 @@ public class UserInput : MonoBehaviour
     IEnumerator previousPage()
     {
         changePageSound.Play();
-        PauseMenu.instance.previousPage();
+        GuiManager.instance.previousPage();
         yield return null;
     }
 

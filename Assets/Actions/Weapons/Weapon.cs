@@ -15,20 +15,27 @@ public class Weapon : Action
         actionType = ActionType.Weapon;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
         //? Perform Action for a weapon is to do an Attack.
 
         //? Target.Health -= (Weapon.damage + Character.Attack) - Target.Defense;
+
         var damageTaken = (caster.characterStats.contains("Attack") + damage) - target.characterStats.contains("Defense");
 
-        target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
+        if (!justCalculate)
+        {   
+            target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
+            target.updateHealthBar();
 
-        target.updateHealthBar();
+            DamageDisplay.create(damageTaken, target.transform.position, Color.red);
+        }
+
+        return damageTaken;
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        return base.showActionRange(movementTiles, start, movementRange);
+        return base.showActionRange(movementTiles, start, movementRange, casterAlignment, justCalculate);
     }
 }

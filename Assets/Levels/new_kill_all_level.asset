@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebd8f11a34a1e264d90e930451d22936, type: 3}
   m_Name: new_kill_all_level
   m_EditorClassIdentifier: 
-  name: 
+  levelName: Test Kill All
+  sceneName: 
   levelType: 0
   turnCount: 0
   maxTurns: 0

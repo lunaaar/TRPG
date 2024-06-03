@@ -17,14 +17,14 @@ public class Spell : Action
         actionType = ActionType.Spell;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
-        base.performAction(caster, target);
+        return base.performAction(caster, target, justCalculate);
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        return base.showActionRange(movementTiles, start, movementRange);
+        return base.showActionRange(movementTiles, start, movementRange, casterAlignment, justCalculate);
     }
 
 }

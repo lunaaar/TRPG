@@ -17,17 +17,24 @@ public class BIDENBLAST : SingleEnemySpell
         damageType = DamageType.Necrotic;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
         var damageTaken = caster.characterStats.contains("Magic") + damage - target.characterStats.contains("Resistance");
 
-        target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
-        target.updateHealthBar();
+        if (!justCalculate)
+        {
+            target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
+            target.updateHealthBar();
+
+            DamageDisplay.create(damageTaken, target.transform.position, Color.red);
+        }
+
+        return damageTaken;
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        return base.showActionRange(movementTiles, start, movementRange);
+        return base.showActionRange(movementTiles, start, movementRange, casterAlignment, justCalculate);
     }
 
 }

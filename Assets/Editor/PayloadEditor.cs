@@ -17,8 +17,11 @@ public class PayloadEditor : Editor
 
         var positions = payloadTarget.displayPayloadPath;
 
+        //Handles.DrawLine(payloadTarget.transform.position, positions[0], 15f);
+
         for (int i = 1; i < positions.Count; i++)
         {
+            
             var previousPosition = positions[i - 1];
             var currentPosition = positions[i];
 

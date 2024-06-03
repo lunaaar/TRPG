@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    public static CameraController instance;
+
     public Camera camera;
     Vector3 cameraPosition;
 
@@ -16,19 +18,19 @@ public class CameraController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        if (instance == null) instance = this;
     }
 
     // Update is called once per frame
     void Update()
     {
-        /**
-        if (!GameManager.gameIsPaused)
+        
+        if (!GuiManager.gameIsPaused)
         {
             cameraPosition = camera.transform.position;
 
-            //handleCameraMovement();
-        }*/
+            handleCameraMovement();
+        }
     }
 
     //Needs to rewrite

@@ -16,15 +16,20 @@ public class SelfAbility : Ability
         targets = ActionTargets.Self;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
-        base.performAction(caster, target);
+        return base.performAction(caster, target, justCalculate);
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
         attackTiles.Clear();
         attackTiles.Add(start);
+
+        if (justCalculate)
+        {
+            return attackTiles;
+        }
 
         //CursorMovement.instance.attackRangeTilemap.SetTile(start.gridPosition, CursorMovement.instance.friendlyTileActive);
         MapManager.instance.floorTilemaps[start.gridPosition.z].SetColor(start.gridPosition, GameManager.instance.friendlyFullColor);

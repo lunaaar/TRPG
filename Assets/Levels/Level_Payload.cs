@@ -21,6 +21,8 @@ public class Level_Payload : Level
     {
         //. Check status, if friendly push 1 more forward.
 
+        //var count = 0;
+
         payload.calculateStatus();
 
         Debug.Log("Payload: " + payload.name +"\n"+
@@ -28,9 +30,10 @@ public class Level_Payload : Level
 
         if(payload.status == Objective.Status.Friendly)
         {
-            while (payload.gridPosition != (payload.next + Vector3Int.back))// && count < 100)
+            while (payload.gridPosition != (payload.next + Vector3Int.back))// && count < 20)
             {
                 payload.moveAlongPath();
+                //count++;
             }
 
             payload.next = payload.payloadPath[Mathf.Min(payload.payloadPath.IndexOf(payload.next) + 1, payload.payloadPath.Count - 1)];

@@ -15,30 +15,34 @@ public class Obstacle : MonoBehaviour
      * <-1,0> is for down left
      * <0,-1> is for down right
      */
-    public List<Vector3Int> usedSpaces;
+    public List<Vector3Int> occupiedSpaces;
     
     [Header("====== Grid Info ======")]
     [Tooltip("Position of the player on the grid")] public Vector3Int gridPosition;
-    [Tooltip("Reference to the grid")] public GameObject grid;
-    private Tilemap t;
-
-    private void Awake()
-    {
-        t = grid.GetComponentInChildren<Tilemap>();
-
-        //Alligns internal grid position with where it actually is;
-        gridPosition = t.WorldToCell(this.transform.position);
-        this.transform.position = t.GetCellCenterWorld(gridPosition);
-    }
-    public void updateGridPos(Vector3Int v)
-    {
-        gridPosition = v;
-        this.transform.position = t.GetCellCenterWorld(gridPosition);
-    }
 
     public void updateGridPos()
     {
-        gridPosition = grid.GetComponentInChildren<Tilemap>().WorldToCell(this.transform.position);
-        this.transform.position = t.GetCellCenterWorld(gridPosition);
+        var sortOrder = GetComponent<SpriteRenderer>().sortingOrder;
+
+        var tilemap = MapManager.instance.floorTilemaps[sortOrder - 1];
+
+        gridPosition = tilemap.WorldToCell(transform.position);
+
+        transform.position = tilemap.GetCellCenterWorld(gridPosition);
+
+        gridPosition.z -= 1;
+    }
+
+    public void updateGridPos(Vector3Int gridPos)
+    {
+        var tilemap = MapManager.instance.floorTilemaps[gridPos.z];
+
+        gridPosition = gridPos;
+
+        transform.position = tilemap.GetCellCenterWorld(gridPos);
+
+        GetComponent<SpriteRenderer>().sortingOrder = gridPos.z;
+
+        gridPosition.z -= 1;
     }
 }

@@ -178,6 +178,10 @@ public class PathFinder
 
         finishedList.Reverse();
 
+        //Debug.Log("Finished List:");
+        //Debug.Log(start + " | " + end);
+        //Debug.Log(finishedList.Count);
+
         return finishedList;
     }
 
@@ -500,26 +504,25 @@ public class PathFinder
         return neighbours;*/
     }
 
-
-    public List<GridTile> getCube(GridTile start, int range)
+    public List<GridTile> getCube(GridTile start, int baseRange, int influenceRange = 0)
     {
         List<GridTile> inRangeTiles = new List<GridTile>();
 
-        if (range % 2 == 0)
+        if (baseRange % 2 == 0)
         {
             /*
              * Even Condition:
              * Treats gridPos as the bottom right most position
              */
-            for (int x = 0; x < range; x++)
-            {
-                for (int y = 0; y < range; y++)
-                {
-                    //capturePointTilemapPositions.Add(new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y));
+            var calcRange = influenceRange + Mathf.FloorToInt(Mathf.Floor(baseRange / 2));
 
-                    for (int z = 1; z > -1; z--)
+            for (int x = -calcRange + 1; x <= calcRange; x++)
+            {
+                for (int y = -calcRange + 1; y <= calcRange; y++)
+                {
+                    for (int z = 2; z > -1; z--)
                     {
-                        var location = new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y, start.gridPosition.z + z);
+                        var location = new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y, start.gridPosition.z);
 
                         if (MapManager.instance.map.ContainsKey(location))
                         {
@@ -529,6 +532,7 @@ public class PathFinder
                     }
                 }
             }
+
         }
         else
         {
@@ -537,14 +541,12 @@ public class PathFinder
              * Treats gridPos as the center position
              */
 
-            var calcRange = Mathf.FloorToInt(Mathf.Floor(range / 2));
+            var calcRange = influenceRange + Mathf.FloorToInt(Mathf.Floor(baseRange/2));
 
             for (int x = -calcRange; x <= calcRange; x++)
             {
                 for (int y = -calcRange; y <= calcRange; y++)
                 {
-                    //capturePointTilemapPositions.Add(new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y));
-
                     for (int z = 1; z > -1; z--)
                     {
                         var location = new Vector3Int(start.gridPosition.x + x, start.gridPosition.y + y, start.gridPosition.z);

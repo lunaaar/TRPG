@@ -136,15 +136,7 @@ public class MapManager : MonoBehaviour
                 {
                     capturePoint.updateGridPos();
 
-                    //floorTilemaps[capturePoint.gridPosition.z].SetTileFlags(capturePoint.gridPosition, TileFlags.None);
-                    floorTilemaps[capturePoint.gridPosition.z].SetColor(capturePoint.gridPosition, GameManager.instance.testColor);
-
-                    //capturePoint.getTilePositionsInRange();
-
                     capturePoint.updateTilemap();
-
-                    tilemap = floorTilemaps[capturePoint.GetComponent<SpriteRenderer>().sortingOrder - 1];
-                    updateTileStatus(capturePoint.gridPosition, "ObjectiveBase", tilemap);
 
                     capturePoint.calculateStatus();
                 }
@@ -154,14 +146,16 @@ public class MapManager : MonoBehaviour
 
                 levelPay.getAllPayloads();
 
+                //. Possibly expansion for a FOR loop here if we ever want to handle multiple payloads.
+
                 levelPay.payload.updateGridPos();
 
                 levelPay.payload.updateTilemap();
 
                 levelPay.payload.setUpPath();
 
-                tilemap = floorTilemaps[levelPay.payload.GetComponent<SpriteRenderer>().sortingOrder - 1];
-                updateTileStatus(levelPay.payload.gridPosition, "ObjectiveBase", tilemap);
+                //tilemap = floorTilemaps[levelPay.payload.GetComponent<SpriteRenderer>().sortingOrder - 1];
+                //updateTileStatus(levelPay.payload.gridPosition, "ObjectiveBase");
 
                 levelPay.payload.calculateStatus();
 
@@ -186,8 +180,10 @@ public class MapManager : MonoBehaviour
         //. Sets all tiles with any obstacles on to occupied.
         foreach (Obstacle obstacle in obstacles)
         {
+            obstacle.updateGridPos();
+
             updateTileStatus(obstacle.gridPosition, "Obstacle");
-            foreach (Vector3Int pos in obstacle.usedSpaces)
+            foreach (Vector3Int pos in obstacle.occupiedSpaces)
             {
                 updateTileStatus(pos + obstacle.gridPosition, "Obstacle");
             }
@@ -275,9 +271,12 @@ public class MapManager : MonoBehaviour
     public void updateTileStatus(Vector3Int location, string status)
     {
         map[location].status = status;
+        map[location].movementPenalty = 1;
 
         if (debugMode)
         {
+            floorTilemaps[location.z].SetColor(location, Color.white);
+            
             switch (status)
             {
                 case "NotOccupied":
@@ -292,11 +291,11 @@ public class MapManager : MonoBehaviour
                 case "Objective":
                     floorTilemaps[location.z].SetTile(location, objectiveTile);
                     break;
-                case "Obstacle":
-                    floorTilemaps[location.z].SetTile(location, obstacleTile);
-                    break;
                 case "ObjectiveBase":
                     floorTilemaps[location.z].SetTile(location, objectiveBaseTile);
+                    break;
+                case "Obstacle":
+                    floorTilemaps[location.z].SetTile(location, obstacleTile);
                     break;
                 case "Water":
                     floorTilemaps[location.z].SetTile(location, waterTile);
@@ -333,7 +332,8 @@ public class MapManager : MonoBehaviour
             case "ObjectiveBase":
                 if (debugMode) tilemap.SetTile(location, objectiveBaseTile);
                 //? This might come back to bite me later.
-                map[location].status = "Obstacle";
+                //. NO SHIT SHERLOCK
+                map[location].status = "ObjectiveBase";
                 break;
             case "Water":
                 if (debugMode) tilemap.SetTile(location, waterTile);
@@ -378,5 +378,18 @@ public class MapManager : MonoBehaviour
         {
             floorTilemaps[t.gridPosition.z].SetColor(t.gridPosition, Color.white);
         }
+    }
+
+    public Character getCharacterAt(GridTile tile)
+    {
+        foreach(Character c in GameManager.instance.listOfAllCharacters)
+        {
+            if(c.gridPosition == tile.gridPosition)
+            {
+                return c;
+            }
+        }
+
+        return null;
     }
 }

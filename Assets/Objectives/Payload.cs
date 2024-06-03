@@ -7,7 +7,6 @@ public class Payload : Objective
     //. Funnily enough. a Payload is just a capture point that moves. So this is going to be very similar.
     
     [Header("====== Payload ======")]
-    [Range(1, 6)] [Tooltip("How big is the cube radius of the zone")] public int influenceRange = 3;
     [Range(1, 6)] public int movementSpeed;
 
     [Space(5)]
@@ -25,6 +24,8 @@ public class Payload : Objective
 
     public void setUpPath()
     {
+        payloadPath.Add(gridPosition);
+        
         foreach (Vector3 v in displayPayloadPath)
         {
             payloadPath.Add(MapManager.instance.floorTilemaps[(int)v.z - 1].WorldToCell(v));
@@ -37,45 +38,18 @@ public class Payload : Objective
     {
         var step = movementSpeed * Time.deltaTime;
 
-        transform.position = Vector3.MoveTowards(transform.position, MapManager.instance.floorTilemaps[next.z].GetCellCenterWorld(next), step);
+        transform.position = Vector3.MoveTowards(transform.position, MapManager.instance.floorTilemaps[next.z - 1].GetCellCenterWorld(next), step);
 
-        if (Vector2.Distance(transform.position, MapManager.instance.floorTilemaps[next.z].GetCellCenterWorld(next)) < 0.0001f)
+        if (Vector2.Distance(transform.position, MapManager.instance.floorTilemaps[next.z - 1].GetCellCenterWorld(next)) < 0.0001f)
         {
-            MapManager.instance.updateTileStatus(gridPosition, "NotOccupied");
-
-            updateGridPos(next);
+            //MapManager.instance.updateTileStatus(gridPosition, "NotOccupied");
 
             resetTilemap();
 
+            updateGridPos(next);
+
             updateTilemap();
             return;
-        }
-    }
-
-    public void updateTilemap()
-    {
-        PathFinder pathFinder = new PathFinder();
-
-        objectivePositions = pathFinder.getCube(MapManager.instance.map[gridPosition], influenceRange);
-
-        foreach (GridTile tile in objectivePositions)
-        {
-            if(MapManager.instance.map[tile.gridPosition].status == "NotOccupied")
-            {
-                MapManager.instance.updateTileStatus(tile.gridPosition, "Objective");
-            }
-        }
-
-        MapManager.instance.updateTileStatus(gridPosition, "ObjectiveBase");
-    }
-    public void resetTilemap()
-    {
-        foreach (GridTile tile in objectivePositions)
-        {
-            if(tile.status == "Objective")
-            {
-                MapManager.instance.updateTileStatus(tile.gridPosition, "NotOccupied");
-            }
         }
     }
 }

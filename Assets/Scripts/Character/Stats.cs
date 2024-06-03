@@ -23,9 +23,9 @@ public class Stats : MonoBehaviour
     public class Stat
     {
         public string key;
-        public float value;
+        public int value;
 
-        public Stat(string k, float v)
+        public Stat(string k, int v)
         {
             key = k; value = v;
         }
@@ -42,7 +42,7 @@ public class Stats : MonoBehaviour
         }
     }
 
-    public void SetStats(string key, float value)
+    public void SetStats(string key, int value)
     {
         foreach(Stat s in stats)
         {
@@ -56,7 +56,7 @@ public class Stats : MonoBehaviour
         stats.Add(new Stat(key, value));
     }
 
-    public float contains(string key)
+    public int contains(string key)
     {
         foreach(Stat s in stats)
         {
@@ -70,7 +70,7 @@ public class Stats : MonoBehaviour
         return -1;
     }
 
-    public float baseStatContains(string key)
+    public int baseStatContains(string key)
     {
         foreach (Stat s in baseStats)
         {
@@ -80,7 +80,7 @@ public class Stats : MonoBehaviour
             }
         }
 
-        return 0;
+        return -1;
     }
 }
 

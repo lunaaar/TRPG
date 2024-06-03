@@ -65,9 +65,7 @@ public class Character : MonoBehaviour
 
     [Header("====== Grid Info ======")]
     [Tooltip("Position of the player on the grid")] public Vector3Int gridPosition;
-    //[Tooltip("Reference to the grid")] public GameObject gridReference;
-    //private Tilemap tilemapReference;
-    private PathFinder pathFinder;
+    //private PathFinder pathFinder;
 
     [Header("TEST STUFF")]
     public GameObject buttonReference;
@@ -83,15 +81,9 @@ public class Character : MonoBehaviour
 
     private void Start()
     {
-        if (characterName == "Dog")
-        {
-            //Debug.Log(transform.position);
-            //Debug.Log(MapManager.instance.tilemap.WorldToCell(transform.position));
-        }
-
         selectedAction = null;
 
-        pathFinder = new PathFinder();
+        //pathFinder = new PathFinder();
     }
 
     private void Update()
@@ -99,8 +91,10 @@ public class Character : MonoBehaviour
 
     }
 
-    public void showGUI(Vector3Int gP)
+    public void setupActionButtons(Vector3Int gP)
     {
+        Debug.Log("SHOW GUI");
+        
         foreach (Transform child in transformReference)
         {
             Destroy(child.gameObject);
@@ -109,48 +103,59 @@ public class Character : MonoBehaviour
         //? I think for now, lets try and get some simple system in place so we can at least test
         //? The rest of the code around how itll end up working.
 
-        Vector3 buttonPosition = new Vector3(-15, 0, 0);
+        Vector3 buttonPosition = new Vector3(0, 0, 0);
 
-        List<Action> listofAll = new List<Action>(listOfWeapons);
-        listofAll.AddRange(listOfSpells);
-        listofAll.AddRange(listOfAbilities);
+        List<Action> listOfAll = new List<Action>(listOfWeapons);
+        listOfAll.AddRange(listOfSpells);
+        listOfAll.AddRange(listOfAbilities);
 
-        foreach(Action a in listofAll)
+        GameObject button;
+        Vector3 position;
+
+        foreach(Action a in listOfAll)
         {
-            GameObject b = Instantiate(buttonReference, transformReference);
-            var pos = b.GetComponent<RectTransform>().localPosition;
-            b.GetComponent<RectTransform>().localPosition = new Vector3(buttonPosition.x + 50, pos.y, pos.z);
-            buttonPosition.x += 50;
-            b.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(a, gP));
+            button = Instantiate(buttonReference, transformReference);
+            position = Vector3.zero;
 
-            if(a.actionIcon != null)
+            button.GetComponent<RectTransform>().anchoredPosition = buttonPosition;
+            //button.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
+            buttonPosition.y -= 16;
+            button.GetComponent<Button>().onClick.AddListener(() => setSelectedAction(a, gP));
+
+            /**if(a.actionIcon != null)
             {
-                b.GetComponentsInChildren<Image>()[1].sprite = a.actionIcon;
-                b.GetComponentsInChildren<Image>()[1].color = Color.black;
-                b.GetComponentInChildren<TextMeshProUGUI>().enabled = false;
+                button.GetComponentsInChildren<Image>()[1].sprite = a.actionIcon;
+                button.GetComponentsInChildren<Image>()[1].color = Color.black;
+                button.GetComponentInChildren<TextMeshProUGUI>().enabled = false;
             }
             else
-            {
-                b.GetComponentInChildren<TextMeshProUGUI>().text = a.name;
-            }
-
+            {*/
+            button.GetComponentInChildren<TextMeshProUGUI>().text = " " + a.name;
+            //}
 
             switch (a.actionType)
             {
                 case (Action.ActionType.Weapon):
-                    b.GetComponent<Image>().color = Color.red;
+                    button.GetComponentInChildren<TextMeshProUGUI>().color = Color.red;
                     break;
                 case (Action.ActionType.Spell):
-                    b.GetComponent<Image>().color = Color.blue;
+                    button.GetComponentInChildren<TextMeshProUGUI>().color = Color.blue;
                     break;
                 case (Action.ActionType.Ability):
-                    b.GetComponent<Image>().color = Color.green;
+                    button.GetComponentInChildren<TextMeshProUGUI>().color = Color.green;
                     break;
                 default:
                     Debug.LogError("Defaulted in showGUI foreach loop.");
                     break;
             }
         }
+
+        button = Instantiate(buttonReference, transformReference);
+        position = button.GetComponent<RectTransform>().localPosition;
+
+        button.GetComponentInChildren<TextMeshProUGUI>().text = " No Action";
+        button.GetComponent<RectTransform>().anchoredPosition = buttonPosition;
+        button.GetComponent<Button>().onClick.AddListener(() => noAction());
     }
 
     public void hideGUI()
@@ -159,6 +164,16 @@ public class Character : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+    }
+
+    public void noAction()
+    {
+        Debug.Log("Test No Action");
+        
+        MapManager.instance.resetAttackTiles();
+        selectedAction = null;
+
+        CursorMovement.instance.characterActionPerformed = true;
     }
 
     public void setSelectedAction(ScriptableObject scriptableObject, Vector3Int gP)
@@ -178,7 +193,7 @@ public class Character : MonoBehaviour
 
             int moveRange = movementRange;
             if (CursorMovement.instance.characterMovementPerformed) moveRange = 0;
-            attackTiles = action.showActionRange(movementTiles, MapManager.instance.map[gridPosition], moveRange);
+            attackTiles = action.showActionRange(movementTiles, MapManager.instance.map[gridPosition], moveRange, alignment.ToString(), false);
         }
         else if(selectedAction.GetType().BaseType.BaseType.BaseType.ToString() == "Action")
         {
@@ -188,7 +203,7 @@ public class Character : MonoBehaviour
 
             int moveRange = movementRange;
             if (CursorMovement.instance.characterMovementPerformed) moveRange = 0;
-            attackTiles = action.showActionRange(movementTiles, MapManager.instance.map[gridPosition], moveRange);
+            attackTiles = action.showActionRange(movementTiles, MapManager.instance.map[gridPosition], moveRange, alignment.ToString(), false);
 
         }
     }
@@ -229,6 +244,8 @@ public class Character : MonoBehaviour
     public void updateHealthBar()
     {
         healthSlider.value = characterStats.contains("currentHealth");
+
+        //? This needs to update stat on pause menu.
     }
 
     public List<GridTile> getTilesInRange(int range)
@@ -249,11 +266,11 @@ public class Character : MonoBehaviour
             {
                 if (!tile.status.Equals("Occupied") && tile.gridPosition != gridPosition )
                 {
-                    surroundingTiles.AddRange(pathFinder.getNeighbourAttackTiles(tile));
+                    surroundingTiles.AddRange(GameManager.instance.pathFinder.getNeighbourAttackTiles(tile));
                 }
                 else if(tile.gridPosition == gridPosition)
                 {
-                    surroundingTiles.AddRange(pathFinder.getNeighbourAttackTiles(tile));
+                    surroundingTiles.AddRange(GameManager.instance.pathFinder.getNeighbourAttackTiles(tile));
                 }
             }
 
@@ -290,13 +307,13 @@ public class Character : MonoBehaviour
             foreach (var tile in tilesToCheck)
             {
                 //surroundingTiles.AddRange(pathFinder.getNeighbourTiles(tile));
-                surroundingTiles.AddRange(pathFinder.getNeighbourTiles(tile));
+                surroundingTiles.AddRange(GameManager.instance.pathFinder.getNeighbourTiles(tile));
             }
 
             foreach (var tile in surroundingTiles)
             {
                 if ((tile.status.Equals("NotOccupied")  || tile.status.Equals("Objective"))
-                    && pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) <= movementRange)
+                    && GameManager.instance.pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) <= movementRange)
                 {
                     movementTiles.Add(tile);
                     tilesToCheck.Add(tile);
@@ -329,5 +346,25 @@ public class Character : MonoBehaviour
         }
 
         movementTiles = list.ToList();
+    }
+
+
+    public void setUpStatScreen()
+    {
+        var characterPortrait = uiReference.GetComponentsInChildren<Image>()[1];
+        characterPortrait.sprite = characterImage;
+        characterPortrait.color = Color.white;
+
+        var arrayOfTexts = uiReference.GetComponentsInChildren<TextMeshProUGUI>();
+
+        arrayOfTexts[0].text = name;
+        arrayOfTexts[1].text = characterStats.contains("maxHealth").ToString();
+        arrayOfTexts[3].text = characterStats.contains("currentHealth").ToString();
+
+        arrayOfTexts[6].text = characterStats.contains("Attack").ToString();
+        arrayOfTexts[8].text = characterStats.contains("Magic").ToString();
+        arrayOfTexts[10].text = characterStats.contains("Defense").ToString();
+        arrayOfTexts[12].text = characterStats.contains("Resistance").ToString();
+        arrayOfTexts[14].text = characterStats.contains("Speed").ToString();
     }
 }

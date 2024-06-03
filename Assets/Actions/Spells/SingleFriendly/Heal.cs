@@ -16,16 +16,23 @@ public class Heal : SingleFriendlySpell
         damageType = DamageType.Holy;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
         var healAmount = caster.characterStats.contains("Magic");
 
-        target.characterStats.SetStats("currentHealth", Mathf.Min(target.characterStats.contains("MaxHealth"), healAmount + target.characterStats.contains("currentHealth")));
-        target.updateHealthBar();
+        if (!justCalculate)
+        {
+            target.characterStats.SetStats("currentHealth", Mathf.Min(target.characterStats.contains("MaxHealth"), healAmount + target.characterStats.contains("currentHealth")));
+            target.updateHealthBar();
+
+            DamageDisplay.create(healAmount, target.transform.position, Color.green);
+        }
+
+        return healAmount;
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        return base.showActionRange(movementTiles, start, movementRange);
+        return base.showActionRange(movementTiles, start, movementRange, casterAlignment, justCalculate);
     }
 }

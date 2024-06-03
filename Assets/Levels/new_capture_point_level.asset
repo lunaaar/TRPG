@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8bc2aeb52c378c44abd649ff3790eb2, type: 3}
   m_Name: new_capture_point_level
   m_EditorClassIdentifier: 
-  name: Test CapturePoint Level
+  levelName: Test Capture Point
   sceneName: 
   levelType: 2
   turnCount: 0

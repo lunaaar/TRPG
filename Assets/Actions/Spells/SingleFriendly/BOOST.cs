@@ -22,23 +22,29 @@ public class BOOST : SingleFriendlySpell
         boostAmount = 3;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
         target.listOfModifications.Add(new Modification(name, caster, target, this, duration));
 
         Debug.Log("BOOST" + boostAmount);
 
-        var total = target.characterStats.contains("Attack") + boostAmount;
+        int buffTotal = target.characterStats.contains("Attack") + boostAmount;
 
-        Debug.Log(total);
+        Debug.Log(buffTotal);
+        if (!justCalculate)
+        {
+            target.characterStats.SetStats("Attack", buffTotal);
+        }
 
-        target.characterStats.SetStats("Attack", total);
+        return buffTotal;
     }
 
-    public override void reapplyAction(Character caster, Character target)
+    public override int reapplyAction(Character caster, Character target)
     {
-        var total = target.characterStats.contains("Attack") + boostAmount;
-        target.characterStats.SetStats("Attack", total);
+        int buffTotal = target.characterStats.contains("Attack") + boostAmount;
+        target.characterStats.SetStats("Attack", buffTotal);
+
+        return buffTotal;
     }
 
     /**public override void undoAction(Character caster, Character target)
@@ -46,8 +52,8 @@ public class BOOST : SingleFriendlySpell
         target.characterStats.SetStats("Attack", target.characterStats.contains("Attack") - boostAmount);
     }*/
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        return base.showActionRange(movementTiles, start, movementRange);
+        return base.showActionRange(movementTiles, start, movementRange, casterAlignment, justCalculate);
     }
 }

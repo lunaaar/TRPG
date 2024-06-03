@@ -7,7 +7,6 @@ using System.Linq;
 public class AOESpell : Spell
 {
     List<GridTile> attackTiles = new List<GridTile>();
-    PathFinder pathFinder = new PathFinder();
 
     [Tooltip("How many tiles in radius is the AOE spell?")]
     public int aoeRadius;
@@ -23,11 +22,25 @@ public class AOESpell : Spell
         aoeRadius = 3;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
+        int totalDamage = 0;
+        string targetAlignment = "";
+
+        switch (caster.alignment)
+        {
+            case (Character.AlignmentStatus.Friendly): case(Character.AlignmentStatus.Neutral):
+                targetAlignment = "Enemy";
+                break;
+            case (Character.AlignmentStatus.Enemy):
+                targetAlignment = "Friendly";
+                break;
+        }
+
+        
         foreach(GridTile tile in attackTiles.Distinct())
         {
-            if(MapManager.instance.map[tile.gridPosition].status == "Enemy")
+            if(MapManager.instance.map[tile.gridPosition].status == targetAlignment)
             {
                 target = GameManager.instance.getCharacterAt(tile.gridPosition);
 
@@ -35,18 +48,27 @@ public class AOESpell : Spell
                 
                 var damageTaken = (caster.characterStats.contains("Magic") + damage) - target.characterStats.contains("Resist");
 
-                //? Mathf.Max prevents the target from taking negative damage and actually healing.
-                target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
-                target.updateHealthBar();
+                totalDamage += damageTaken;
+
+                if (!justCalculate)
+                {
+                    //? Mathf.Max prevents the target from taking negative damage and actually healing.
+                    target.characterStats.SetStats("currentHealth", Mathf.Max(target.characterStats.contains("currentHealth") - damageTaken, 0));
+                    target.updateHealthBar();
+
+                    DamageDisplay.create(damageTaken, target.transform.position, Color.red);
+                }
             }
         }
+
+        return totalDamage;
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile end, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile end, int movementRange, string casterAlignment, bool justCalculate)
     {
         //CursorMovement.instance.attackRangeTilemap.ClearAllTiles();
 
-        var path = pathFinder.findTruePath(MapManager.instance.map[CursorMovement.instance.selectedCharacter.gridPosition], end);
+        var path = GameManager.instance.pathFinder.findTruePath(MapManager.instance.map[CursorMovement.instance.selectedCharacter.gridPosition], end);
 
         if (path.Count <= 0)
         {
@@ -74,7 +96,12 @@ public class AOESpell : Spell
 
         if (path.Count <= range + CursorMovement.instance.selectedCharacter.movementRange)
         {
-            attackTiles = pathFinder.getTilesInRange(end, aoeRadius);
+            attackTiles = GameManager.instance.pathFinder.getTilesInRange(end, aoeRadius);
+
+            if (justCalculate)
+            {
+                return attackTiles;
+            }
 
             foreach (GridTile tile in attackTiles.Distinct())
             {
@@ -83,7 +110,7 @@ public class AOESpell : Spell
                     continue;
                 }
                 
-                if (tile.status.Equals("Enemy"))
+                if (tile.status.Equals(GameManager.instance.getOtherAlignemnt(casterAlignment)))
                 {
                     //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.attackTileActive);
                     MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.attackFullColor);

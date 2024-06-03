@@ -29,15 +29,13 @@ public class SingleFriendlySpell : Spell
         damageType = DamageType.Necrotic;
     }
 
-    public override void performAction(Character caster, Character target)
+    public override int performAction(Character caster, Character target, bool justCalculate)
     {
-        base.performAction(caster, target);
+        return base.performAction(caster, target, justCalculate);
     }
 
-    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange)
+    public override List<GridTile> showActionRange(List<GridTile> movementTiles, GridTile start, int movementRange, string casterAlignment, bool justCalculate)
     {
-        PathFinder pathFinder = new PathFinder();
-
         attackTiles.Clear();
 
         int step = 0;
@@ -50,7 +48,7 @@ public class SingleFriendlySpell : Spell
 
             foreach (var tile in attackTilesToCheck)
             {
-                surroundingTiles.AddRange(pathFinder.getNeighbourAttackTiles(tile));
+                surroundingTiles.AddRange(GameManager.instance.pathFinder.getNeighbourAttackTiles(tile));
             }
 
             surroundingTiles = surroundingTiles.Distinct().ToList();
@@ -70,7 +68,7 @@ public class SingleFriendlySpell : Spell
                     attackTilesToCheck.Add(tile);
                 }
 
-                var path = pathFinder.findPath(start, tile);
+                var path = GameManager.instance.pathFinder.findPath(start, tile);
                 
                 //TODO: This needs to be fixed
                 if (path.Sum(t => t.movementPenalty) >= closeRange + movementRange
@@ -87,6 +85,11 @@ public class SingleFriendlySpell : Spell
         attackTiles = attackTiles.Distinct().ToList();
         attackTiles.Remove(start);
 
+        if (justCalculate)
+        {
+            return attackTiles;
+        }
+
         foreach (var tile in attackTiles)
         {
             if (tile.status.Equals("Friendly"))
@@ -94,7 +97,7 @@ public class SingleFriendlySpell : Spell
                 //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.friendlyTileActive);
                 MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.friendlyFullColor);
             }
-            else if (pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
+            else if (GameManager.instance.pathFinder.findPath(start, tile).Sum(t => t.movementPenalty) == range + movementRange)
             {
                 //CursorMovement.instance.attackRangeTilemap.SetTile(tile.gridPosition, CursorMovement.instance.friendlyTileEmpty);
                 MapManager.instance.floorTilemaps[tile.gridPosition.z].SetColor(tile.gridPosition, GameManager.instance.friendlyEmptyColor);

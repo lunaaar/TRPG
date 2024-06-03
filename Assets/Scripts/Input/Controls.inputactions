@@ -24,9 +24,18 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Select",
+                    "name": "TapSelect",
                     "type": "Button",
                     "id": "59d86836-80ba-4902-8474-19fe975ab33e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "HoldSelect",
+                    "type": "Button",
+                    "id": "3c78358e-3d06-4822-9382-b8cab25918eb",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -60,10 +69,10 @@
                     "name": "",
                     "id": "3698a298-f47f-4159-8ed1-bcf7fff18021",
                     "path": "<Mouse>/leftButton",
-                    "interactions": "Press",
+                    "interactions": "Tap",
                     "processors": "",
                     "groups": "Mouse",
-                    "action": "Select",
+                    "action": "TapSelect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -71,10 +80,10 @@
                     "name": "",
                     "id": "24d551d5-9a95-4654-aa7b-46dd4ff52a7a",
                     "path": "<Gamepad>/buttonSouth",
-                    "interactions": "Press",
+                    "interactions": "Tap",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Select",
+                    "action": "TapSelect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -94,7 +103,7 @@
                     "id": "42826888-69c0-4a26-903c-a2081bdefd5f",
                     "path": "<Gamepad>/leftStick",
                     "interactions": "",
-                    "processors": "StickDeadzone(min=0.5,max=1),ScaleVector2(y=0.5),NormalizeVector2",
+                    "processors": "StickDeadzone(min=0.5,max=1),NormalizeVector2",
                     "groups": "Gamepad",
                     "action": "LookAround",
                     "isComposite": false,
@@ -163,6 +172,28 @@
                     "processors": "ScaleVector2(y=0.5),NormalizeVector2",
                     "groups": "Gamepad",
                     "action": "LookAround",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5a3a381f-cff9-4fad-8399-ba54d1d130a7",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "Hold(duration=0.3)",
+                    "processors": "",
+                    "groups": "Mouse",
+                    "action": "HoldSelect",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3db04983-d8ed-4120-9cb2-f3ffa55aa68a",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "HoldSelect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
